@@ -26,6 +26,7 @@ class EOAImageVisualizer:
     _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
     _maxcbar  = np.nan
     _flip_data = True
+    _eoas_pyutils_path =  './eoas_pyutils'# This is the path where the eoas_utils folder is stored with respect to the main project
     _contourf = False  # When plotting non-regular grids and need precision
     _background = BackgroundType.BLUE_MARBLE_LR  # Select the background to use
     _auto_colormap = True  # Selects the colormap based on the name of the field
@@ -87,13 +88,13 @@ class EOAImageVisualizer:
             c_ax.stock_img()
         else:
             if self._background == BackgroundType.BLUE_MARBLE_LR:
-                img = plt.imread('./viz_utils/imgs/bluemarble.png')  #
+                img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bluemarble.png'))
             if self._background == BackgroundType.BLUE_MARBLE_HR:
-                img = plt.imread('./viz_utils/imgs/bluemarble_5400x2700.jpg')  #
+                img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bluemarble_5400x2700.jpg'))
             if self._background == BackgroundType.TOPO:
-                img = plt.imread('./viz_utils/imgs/etopo.png')  #
+                img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/etopo.png'))
             if self._background == BackgroundType.BATHYMETRY:
-                img = plt.imread('./viz_utils/imgs/bathymetry_3600x1800.jpg')  #
+                img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bathymetry_3600x1800.jpg'))
             c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
