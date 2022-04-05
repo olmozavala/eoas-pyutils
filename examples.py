@@ -22,7 +22,7 @@ lats = coords['plat:']
 print("Done!")
 
 ## Plotting data
-viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs")
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
 viz_obj.plot_3d_data_npdict(hycom_fields, ['temp','u-vel.'], range(len(layers)), 'MyTitle', 'myplot')
 print("Done!")
 ##
