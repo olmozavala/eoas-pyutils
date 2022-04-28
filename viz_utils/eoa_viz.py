@@ -46,6 +46,7 @@ class EOAImageVisualizer:
     _contourf = False  # When plotting non-regular grids and need precision
     _background = BackgroundType.BLUE_MARBLE_LR  # Select the background to use
     _auto_colormap = True  # Selects the colormap based on the name of the field
+    _show_var_names = False  # Includes the name of the field name in the titles
 
     def __init__(self, disp_images=True, output_folder='output',
                  lats=[-90,90], lons =[-180,180],
@@ -78,7 +79,6 @@ class EOAImageVisualizer:
                 cbar.set_label(label, fontsize=font_size_cbar*1.2)
             else:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
-
 
     def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan) -> None:
         """
@@ -119,8 +119,12 @@ class EOAImageVisualizer:
             c_ax.contour(c_img)
 
         gl = c_ax.gridlines(draw_labels=True, color='grey', alpha=0.5, linestyle='--')
+        # gl.xlabel_style = {'size': self._font_size/2, 'color': '#aaaaaa', 'weight':'bold'}
+        font_coords = {'size': self._font_size*.6}
+        gl.xlabel_style = font_coords
+        gl.ylabel_style = font_coords
         gl.top_labels = False
-        gl.left_labels = False
+        gl.right_labels = False
 
         return im
 
@@ -246,7 +250,7 @@ class EOAImageVisualizer:
                 if rows*cols == 1:
                     ax = _axs
                 else:
-                    ax = _axs[c_row, idx_var]
+                    ax = _axs.flatten()[c_row*len(var_names)+ idx_var]
 
                 # Here we chose the min and max colorbars for each field
                 if not(np.all(np.isnan(mincbar))):
@@ -260,10 +264,10 @@ class EOAImageVisualizer:
                 im = self.plot_slice_eoa(np_variables[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
                                          mincbar=c_mincbar, maxcbar=c_maxcbar)
 
-                if var_names != '':
+                if self._show_var_names:
                     c_title = F'{var_names[idx_var]} {title} Z-level:{c_slice_txt}'
                 else:
-                    c_title = F'{idx_var} {title} Z-level:{c_slice_txt}'
+                    c_title = F'{title} Z-level:{c_slice_txt}'
 
                 ax.set_title(c_title, fontsize=self._font_size)
 

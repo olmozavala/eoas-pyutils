@@ -3,9 +3,10 @@ sys.path.append("hycom_utils/python")
 
 from hycom.io import read_hycom_fields, subset_hycom_field, read_hycom_coords
 from hycom.info import read_field_names
+import xarray as xr
 from viz_utils.eoa_viz import EOAImageVisualizer
 
-## Reading data
+## ------------ HYCOM -----------
 print("Reading data...")
 input_file = "./hycom_utils/test_data/archv.2009_153_00.a"
 coords_file = "./hycom_utils/test_data/regional.grid.a"
@@ -17,13 +18,26 @@ hycom_fields = read_hycom_fields(input_file, fields, layers)
 
 print(F"The coords available are: {read_field_names(coords_file)}")
 coords = read_hycom_coords(coords_file, ['plon:', 'plat:'])
-lons = coords['plon:']
-lats = coords['plat:']
+lons = coords['plon']
+lats = coords['plat']
 print("Done!")
 
-## Plotting data
 viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
-viz_obj.plot_3d_data_npdict(hycom_fields, ['temp','u-vel.'], range(len(layers)), 'MyTitle', 'myplot')
+viz_obj.plot_3d_data_npdict(hycom_fields, ['temp','u-vel.'], [0], 'MyTitle', 'myplot')
 print("Done!")
+
+## ------------ NetCDF -----------
+print("Reading data...")
+input_file = "/home/olmozavala/Dropbox/TestData/netCDF/ECMWF/ERA-interim/2012-08-01_2012-08-02.nc"
+df = xr.load_dataset(input_file)
+print(df.info())
+# Reading specific field and layers
+lons = df.longitude
+lats = df.latitude
+
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
+viz_obj.plot_3d_data_npdict(df, ['u10','v10'], [0], 'MyTitle', 'myplot')
+print("Done!")
+
 ##
 
