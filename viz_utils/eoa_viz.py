@@ -14,6 +14,22 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy
 
+def select_colormap(field_name):
+    cmaps_fields = []
+    if field_name in ('ssh', 'srfhgt'):
+        # cmaps_fields.append(cmocean.cm.deep_r)
+        cmaps_fields.append(cmocean.cm.curl)
+    elif field_name in ('temp', 'sst', 'temperature'):
+        cmaps_fields.append(cmocean.cm.thermal)
+    elif field_name == "salin" or field_name == "sss" or field_name == "sal":
+        cmaps_fields.append(cmocean.cm.haline)
+    elif field_name in ('u', 'v', 'u-vel.', 'v-vel.'):
+        cmaps_fields.append(cmocean.cm.speed)
+    elif field_name.find("error") != -1:
+        cmaps_fields.append(cmocean.cm.diff)
+    return cmaps_fields
+
+
 class EOAImageVisualizer:
     """This class makes plenty of plots assuming we are plotting Geospatial data (maps).
     It is made to read xarrays, numpy arrays, and numpy arrays in dictionaries"""
@@ -63,13 +79,6 @@ class EOAImageVisualizer:
             else:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
 
-    def select_colormap(self, field_name):
-        if field_name in ('temp', 'sst', 'temperature'):
-            return cmocean.cm.thermal
-        if field_name in ('ssh', 'srfhgt'):
-            return cmocean.cm.deep
-        if field_name in ('u', 'v', 'u-vel.', 'v-vel.'):
-            return cmocean.cm.speed
 
     def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan) -> None:
         """
@@ -246,7 +255,7 @@ class EOAImageVisualizer:
                     c_maxcbar = maxcbar[idx_var]
 
                 if self._auto_colormap:
-                    cmap = self.select_colormap(c_var)
+                    cmap = select_colormap(c_var)
 
                 im = self.plot_slice_eoa(np_variables[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
                                          mincbar=c_mincbar, maxcbar=c_maxcbar)
