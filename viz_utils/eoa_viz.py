@@ -15,19 +15,25 @@ import cartopy.feature as cfeature
 import cartopy
 
 def select_colormap(field_name):
-    cmaps_fields = []
+    '''
+    Based on the name if the field it chooses a colormap from cmocean
+    Args:
+        field_name:
+
+    Returns:
+
+    '''
     if field_name in ('ssh', 'srfhgt'):
         # cmaps_fields.append(cmocean.cm.deep_r)
-        cmaps_fields.append(cmocean.cm.curl)
+        return cmocean.cm.curl
     elif field_name in ('temp', 'sst', 'temperature'):
-        cmaps_fields.append(cmocean.cm.thermal)
+        return cmocean.cm.thermal
     elif field_name == "salin" or field_name == "sss" or field_name == "sal":
-        cmaps_fields.append(cmocean.cm.haline)
+        return cmocean.cm.haline
     elif field_name in ('u', 'v', 'u-vel.', 'v-vel.'):
-        cmaps_fields.append(cmocean.cm.speed)
+        return cmocean.cm.speed
     elif field_name.find("error") != -1:
-        cmaps_fields.append(cmocean.cm.diff)
-    return cmaps_fields
+        return cmocean.cm.diff
 
 
 class EOAImageVisualizer:
@@ -295,7 +301,7 @@ class EOAImageVisualizer:
         :param maxcbar:
         :return:
         '''
-        npdict_3d = {field_name: np.expand_dims(np_variables[i,:,:]) for i, field_name in enumerate(var_names)}
+        npdict_3d = {field_name: np.expand_dims(np_variables[i,:,:], axis=0) for i, field_name in enumerate(var_names)}
         self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
                             file_name_prefix=file_name_prefix, cmap=cmap, z_names = [], flip_data=flip_data,
                             show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
