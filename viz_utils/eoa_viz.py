@@ -276,3 +276,27 @@ class EOAImageVisualizer:
         file_name = F'{file_name_prefix}_{c_slice_txt:04d}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
+
+    def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
+                            file_name_prefix='', cmap='viridis',  flip_data=True,
+                            rot_90=True, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+        '''
+        Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
+        :param np_variables:
+        :param var_names:
+        :param title:
+        :param file_name_prefix:
+        :param cmap:
+        :param flip_data:
+        :param rot_90:
+        :param show_color_bar:
+        :param plot_mode:
+        :param mincbar:
+        :param maxcbar:
+        :return:
+        '''
+        npdict_3d = {field_name: np.expand_dims(np_variables[i,:,:]) for i, field_name in enumerate(var_names)}
+        self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
+                            file_name_prefix=file_name_prefix, cmap=cmap, z_names = [], flip_data=flip_data,
+                            show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
+
