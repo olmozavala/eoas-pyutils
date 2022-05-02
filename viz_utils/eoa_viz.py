@@ -23,16 +23,16 @@ def select_colormap(field_name):
     Returns:
 
     '''
-    if field_name in ('ssh', 'srfhgt'):
+    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt')]):
         # cmaps_fields.append(cmocean.cm.deep_r)
         return cmocean.cm.curl
-    elif field_name in ('temp', 'sst', 'temperature'):
+    elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
         return cmocean.cm.thermal
-    elif field_name == "salin" or field_name == "sss" or field_name == "sal":
+    elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
-    elif field_name in ('u', 'v', 'u-vel.', 'v-vel.'):
+    elif np.any([field_name.find(x) != -1 for x in ('u', 'v', 'u-vel.', 'v-vel.')]):
         return cmocean.cm.speed
-    elif field_name.find("error") != -1:
+    elif np.any([field_name.find(x) != -1 for x in ('error')]):
         return cmocean.cm.diff
 
 
@@ -224,7 +224,7 @@ class EOAImageVisualizer:
         return ax
 
     def plot_3d_data_npdict(self, np_variables:list, var_names:list, z_levels= [], title='',
-                          file_name_prefix='', cmap='viridis', z_names = [], flip_data=True,
+                          file_name_prefix='', cmap='viridis', z_names = [],
                           show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         """
         Plots multiple z_levels for multiple fields.
@@ -236,14 +236,17 @@ class EOAImageVisualizer:
         if len(z_levels) == 0:
             z_levels = range(np_variables[0].shape[0])
 
-        rows = len(z_levels)
-        cols = len(var_names)
+        cols = np.min((self._max_imgs_per_row, len(var_names)))
+        if cols == len(var_names):
+            rows = len(z_levels)
+        else:
+            rows = int(len(z_levels) * np.ceil(len(var_names)/cols))
 
         fig, _axs = plt.subplots(rows, cols,
                                  figsize=self.get_proper_size(rows, cols),
                                  subplot_kw={'projection': self._projection})
 
-        for c_row, c_slice in enumerate(z_levels):  # Iterates over the z-levels
+        for c_zlevel, c_slice in enumerate(z_levels):  # Iterates over the z-levels
             # Verify the index of the z_levels are the original ones.
             if len(z_names) != 0:
                 c_slice_txt = z_names[c_slice]
@@ -253,10 +256,10 @@ class EOAImageVisualizer:
             c_mincbar = np.nan
             c_maxcbar = np.nan
             for idx_var, c_var in enumerate(var_names): # Iterate over the fields
-                if rows*cols == 1:
+                if rows*cols == 1:  # Single figure
                     ax = _axs
                 else:
-                    ax = _axs.flatten()[c_row*len(var_names)+ idx_var]
+                    ax = _axs.flatten()[c_zlevel*len(var_names) + idx_var]
 
                 # Here we chose the min and max colorbars for each field
                 if not(np.all(np.isnan(mincbar))):
@@ -271,9 +274,12 @@ class EOAImageVisualizer:
                                          mincbar=c_mincbar, maxcbar=c_maxcbar)
 
                 if self._show_var_names:
-                    c_title = F'{var_names[idx_var]} {title} Z-level:{c_slice_txt}'
+                    c_title = F'{var_names[idx_var]} {title}'
                 else:
-                    c_title = F'{title} Z-level:{c_slice_txt}'
+
+                    c_title = F'{title}'
+                if len(z_levels) > 1:
+                    c_title += F"Z - level: {c_slice_txt}"
 
                 ax.set_title(c_title, fontsize=self._font_size)
 
@@ -301,8 +307,16 @@ class EOAImageVisualizer:
         :param maxcbar:
         :return:
         '''
-        npdict_3d = {field_name: np.expand_dims(np_variables[i,:,:], axis=0) for i, field_name in enumerate(var_names)}
+        npdict_3d = {}
+        for i, field_name in enumerate(var_names):
+            c_np_data = np_variables[i, :, :]
+            if rot_90:
+                c_np_data = np.rot90(c_np_data)
+            if flip_data:
+                c_np_data = np.flip(np.flip(c_np_data), axis=1)
+            npdict_3d[field_name] = np.expand_dims(c_np_data, axis=0)
+
         self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
-                            file_name_prefix=file_name_prefix, cmap=cmap, z_names = [], flip_data=flip_data,
-                            show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
+                        file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
+                        show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
 
