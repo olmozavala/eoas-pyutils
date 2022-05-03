@@ -23,7 +23,7 @@ def select_colormap(field_name):
     Returns:
 
     '''
-    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt')]):
+    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt')]):
         # cmaps_fields.append(cmocean.cm.deep_r)
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
@@ -234,7 +234,7 @@ class EOAImageVisualizer:
 
         # If the user do not requires any z-leve, then all are plotted
         if len(z_levels) == 0:
-            z_levels = range(np_variables[0].shape[0])
+            z_levels = range(np_variables[var_names[0]].shape[0])
 
         cols = np.min((self._max_imgs_per_row, len(var_names)))
         if cols == len(var_names):
@@ -289,6 +289,30 @@ class EOAImageVisualizer:
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
 
+    def plot_2d_data_xr(self, np_variables:list, var_names:list, title='',
+                            file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+        '''
+        Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
+        :param np_variables:
+        :param var_names:
+        :param title:
+        :param file_name_prefix:
+        :param cmap:
+        :param flip_data:
+        :param rot_90:
+        :param show_color_bar:
+        :param plot_mode:
+        :param mincbar:
+        :param maxcbar:
+        :return:
+        '''
+        npdict_3d = {}
+        for i, field_name in enumerate(var_names):
+            npdict_3d[field_name] = np.expand_dims(np_variables[field_name], axis=0)
+        self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
+                        file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
+                        show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
+
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
                             file_name_prefix='', cmap='viridis',  flip_data=True,
                             rot_90=True, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
@@ -309,7 +333,11 @@ class EOAImageVisualizer:
         '''
         npdict_3d = {}
         for i, field_name in enumerate(var_names):
-            c_np_data = np_variables[i, :, :]
+            if len(np_variables.shape) == 3:
+                c_np_data = np_variables[i, :, :]
+            else:
+                c_np_data = np_variables # Single field
+
             if rot_90:
                 c_np_data = np.rot90(c_np_data)
             if flip_data:
