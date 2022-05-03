@@ -34,6 +34,8 @@ def select_colormap(field_name):
         return cmocean.cm.speed
     elif np.any([field_name.find(x) != -1 for x in ('error')]):
         return cmocean.cm.diff
+    elif np.any([field_name.find(x) != -1 for x in ('binary')]):
+        return cmocean.cm.oxy
 
 
 class EOAImageVisualizer:
@@ -53,6 +55,7 @@ class EOAImageVisualizer:
     _background = BackgroundType.BLUE_MARBLE_LR  # Select the background to use
     _auto_colormap = True  # Selects the colormap based on the name of the field
     _show_var_names = False  # Includes the name of the field name in the titles
+    _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
 
     def __init__(self, disp_images=True, output_folder='output',
                  lats=[-90,90], lons =[-180,180],
@@ -124,6 +127,18 @@ class EOAImageVisualizer:
         if mode == PlotMode.CONTOUR or mode == PlotMode.MERGED:
             c_ax.contour(c_img)
 
+        if len(self._additional_polygons) > 0:
+            pol_lats = []
+            pol_lons = []
+            for c_polygon in self._additional_polygons:
+                x,y = c_polygon.exterior.xy
+                pol_lats += y
+                pol_lons += x
+                c_ax.plot(x,y, transform=self._projection, c='r')
+
+            #  Adds a threshold to the plot to see the polygons
+            c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
+
         gl = c_ax.gridlines(draw_labels=True, color='grey', alpha=0.5, linestyle='--')
         # gl.xlabel_style = {'size': self._font_size/2, 'color': '#aaaaaa', 'weight':'bold'}
         font_coords = {'size': self._font_size*.6}
@@ -154,11 +169,21 @@ class EOAImageVisualizer:
         else:
             plt.close()
 
-    def getExtent(self, lats, lons):
-        minLat = np.amin(lats)
-        maxLat = np.amax(lats)
-        minLon = np.amin(lons)
-        maxLon = np.amax(lons)
+    def getExtent(self, lats, lons, expand_ext=0.0):
+        '''
+        Obtains the bbox of the coordinates. If included threshold then increases the bbox in all directions with that thres
+        Args:
+            lats:
+            lons:
+            inc_threshold:
+
+        Returns:
+
+        '''
+        minLat = np.amin(lats) - expand_ext
+        maxLat = np.amax(lats) + expand_ext
+        minLon = np.amin(lons) - expand_ext
+        maxLon = np.amax(lons) + expand_ext
         bbox = (minLon, maxLon, minLat, maxLat)
         return bbox
 
@@ -318,7 +343,7 @@ class EOAImageVisualizer:
                             rot_90=True, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
-        :param np_variables:
+        :param np_variables: Numpy variables. They can be with shape [fields, x, y] or just a single field with shape [x,y]
         :param var_names:
         :param title:
         :param file_name_prefix:
@@ -336,7 +361,7 @@ class EOAImageVisualizer:
             if len(np_variables.shape) == 3:
                 c_np_data = np_variables[i, :, :]
             else:
-                c_np_data = np_variables # Single field
+                c_np_data = np_variables  # Single field
 
             if rot_90:
                 c_np_data = np.rot90(c_np_data)
