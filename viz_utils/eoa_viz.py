@@ -30,12 +30,12 @@ def select_colormap(field_name):
         return cmocean.cm.thermal
     elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
-    elif np.any([field_name.find(x) != -1 for x in ('u', 'v', 'u-vel.', 'v-vel.')]):
-        return cmocean.cm.speed
-    elif np.any([field_name.find(x) != -1 for x in ('error')]):
+    elif field_name.find('error') != -1:
         return cmocean.cm.diff
     elif np.any([field_name.find(x) != -1 for x in ('binary')]):
         return cmocean.cm.oxy
+    elif np.any([field_name.find(x) != -1 for x in ('u', 'v', 'u-vel.', 'v-vel.')]):
+        return cmocean.cm.speed
 
 
 class EOAImageVisualizer:

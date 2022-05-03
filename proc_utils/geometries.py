@@ -3,7 +3,7 @@ from rtree import index
 
 from matplotlib import path
 
-def intersect_polygon_grid(lats, lons, polygon):
+def intersect_polygon_grid(grid, lats, lons, polygon):
     '''
     It generates a binary grid with the intersected locations of a polygon
     Args:
@@ -14,12 +14,8 @@ def intersect_polygon_grid(lats, lons, polygon):
     Returns:
     '''
     # probably can remove the loops here and do this one line contains_points and not masked!
-
-    idx = index.Index()
-
     gom_path = path.Path(polygon)
-    grid = np.full((len(lats),len(lons)), np.nan)
-    # TODO it must be a better way to do it
+    # Pretty slow
     for i in range(0, len(lats)):
         for j in range(0, len(lons)):
             if not np.ma.is_masked(grid[i, j]):
@@ -50,7 +46,8 @@ if __name__ == "__main__":
     # viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field with polygon', file_name_prefix='Test', z_levels=[0])
 
     print("Making the intersection...")
-    grid_bin = intersect_polygon_grid(lats, lons, data)
+    grid = np.full((len(lats),len(lons)), np.nan)
+    grid_bin = intersect_polygon_grid(grid, lats, lons, data)
     print("Done!")
     viz_obj.plot_2d_data_np(grid_bin, ['binary_grid'], flip_data=False, rot_90=False, title=F'Intersection Example', file_name_prefix='Test')
     print("Done")
