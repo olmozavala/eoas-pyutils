@@ -1,5 +1,5 @@
-from shapely.geometry import box, Polygon, Point, MultiPoint
-from rtree import index
+from shapely.geometry import Polygon
+import numpy as np
 
 from matplotlib import path
 
@@ -19,7 +19,6 @@ def intersect_polygon_grid(grid, lats, lons, polygon):
     for i in range(0, len(lats)):
         for j in range(0, len(lons)):
             if not np.ma.is_masked(grid[i, j]):
-                # grid[i, j] = polygon.intersection(Point(lons[i],lats[i])).area
                 grid[i,j] = not gom_path.contains_points(([[lons[j], lats[i]]]))
 
     return grid
