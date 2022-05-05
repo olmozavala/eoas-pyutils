@@ -52,7 +52,7 @@ lons = df.longitude
 lats = df.latitude
 
 viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs",
-                             eoas_pyutils_path=".", show_var_names=True)
+                             eoas_pyutils_path=".", show_var_names=True, contour_labels=[4])
 npdata_2d = np.array([df.u10[0,:,:], df.v10[0,:,:]])
 # viz_obj.plot_2d_data_np(npdata_2d, ['u10','v10'], 'MyTitle', 'filepref')
 viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'MyTitle', 'filepref', plot_mode=PlotMode.RASTER)

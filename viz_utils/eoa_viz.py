@@ -125,12 +125,15 @@ class EOAImageVisualizer:
                 else:
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection)
 
-        if mode == PlotMode.CONTOUR:
+        if mode == PlotMode.CONTOUR or mode == PlotMode.MERGED:
             c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
-            im = c_ax.contour(c_img, extent=self._extent, transform=self._projection)
-        if mode == PlotMode.MERGED:
-            c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
-            c_ax.contour(c_img, extent=self._extent, transform=self._projection)
+            if mode == PlotMode.CONTOUR:
+                im = c_ax.contour(c_img, extent=self._extent, transform=self._projection)
+            if mode == PlotMode.MERGED:
+                if self._contour_labels:
+                    c_ax.contour(c_img, self._contour_labels, colors='r', extent=self._extent, transform=self._projection)
+                else:
+                    c_ax.contour(c_img,  colors='r', extent=self._extent, transform=self._projection)
 
         if len(self._additional_polygons) > 0:
             pol_lats = []
