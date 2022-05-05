@@ -44,7 +44,7 @@ class EOAImageVisualizer:
     _COLORS = ['y', 'r', 'c', 'b', 'g', 'w', 'k', 'y', 'r', 'c', 'b', 'g', 'w', 'k']
     _figsize = 8
     _font_size = 30
-    _fig_prop = 1.8  # Proportion of each figure w/h
+    _fig_prop = 1  # Proportion of each figure w/h
     _units = ''
     _max_imgs_per_row = 4
     _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
@@ -125,7 +125,7 @@ class EOAImageVisualizer:
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection)
 
         if mode == PlotMode.CONTOUR or mode == PlotMode.MERGED:
-            c_ax.contour(c_img)
+            c_ax.contour(c_img, extent=self._extent)
 
         if len(self._additional_polygons) > 0:
             pol_lats = []
@@ -310,6 +310,7 @@ class EOAImageVisualizer:
 
                 self.add_colorbar(fig, im, ax, show_color_bar)
 
+        plt.tight_layout(True)
         file_name = F'{file_name_prefix}_{c_slice_txt:04d}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
@@ -339,8 +340,8 @@ class EOAImageVisualizer:
                         show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
 
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
-                            file_name_prefix='', cmap='viridis',  flip_data=True,
-                            rot_90=True, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+                            file_name_prefix='', cmap='viridis',  flip_data=False,
+                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param np_variables: Numpy variables. They can be with shape [fields, x, y] or just a single field with shape [x,y]

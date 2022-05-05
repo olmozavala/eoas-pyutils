@@ -18,8 +18,9 @@ def intersect_polygon_grid(grid, lats, lons, polygon):
     # Pretty slow
     for i in range(0, len(lats)):
         for j in range(0, len(lons)):
-            if not np.ma.is_masked(grid[i, j]):
-                grid[i,j] = not gom_path.contains_points(([[lons[j], lats[i]]]))
+            # if not np.ma.is_masked(grid[i, j]):
+            if not np.isnan(grid[i, j]):
+                grid[i, j] = not gom_path.contains_points(([[lons[j], lats[i]]]))
 
     return grid
 
