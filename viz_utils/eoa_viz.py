@@ -44,7 +44,6 @@ class EOAImageVisualizer:
     _COLORS = ['y', 'r', 'c', 'b', 'g', 'w', 'k', 'y', 'r', 'c', 'b', 'g', 'w', 'k']
     _figsize = 8
     _font_size = 30
-    _fig_prop = 1  # Proportion of each figure w/h
     _units = ''
     _max_imgs_per_row = 4
     _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
@@ -64,9 +63,11 @@ class EOAImageVisualizer:
         self._disp_images = disp_images
         self._output_folder = output_folder
         self._projection = projection
-        self._extent = self.getExtent(lats, lons)
+        bbox = self.getExtent(lats, lons)
+        self._extent = bbox
         self._lats = lats
         self._lons = lons
+        self._fig_prop = (bbox[1]-bbox[0])/(bbox[3]-bbox[2])
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
 
@@ -124,8 +125,12 @@ class EOAImageVisualizer:
                 else:
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection)
 
-        if mode == PlotMode.CONTOUR or mode == PlotMode.MERGED:
-            c_ax.contour(c_img, extent=self._extent)
+        if mode == PlotMode.CONTOUR:
+            c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
+            im = c_ax.contour(c_img, extent=self._extent, transform=self._projection)
+        if mode == PlotMode.MERGED:
+            c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
+            c_ax.contour(c_img, extent=self._extent, transform=self._projection)
 
         if len(self._additional_polygons) > 0:
             pol_lats = []
@@ -310,7 +315,7 @@ class EOAImageVisualizer:
 
                 self.add_colorbar(fig, im, ax, show_color_bar)
 
-        plt.tight_layout(True)
+        plt.tight_layout(pad=.5)
         file_name = F'{file_name_prefix}_{c_slice_txt:04d}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()

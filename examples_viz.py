@@ -6,6 +6,7 @@ from hycom.info import read_field_names
 import xarray as xr
 import numpy as np
 from viz_utils.eoa_viz import EOAImageVisualizer
+from viz_utils.constants import PlotMode
 
 ## ==================== 3D =========================================
 ## ------------ HYCOM -----------
@@ -50,9 +51,11 @@ print(df.info())
 lons = df.longitude
 lats = df.latitude
 
-viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs",
+                             eoas_pyutils_path=".", show_var_names=True)
 npdata_2d = np.array([df.u10[0,:,:], df.v10[0,:,:]])
-viz_obj.plot_2d_data_np(npdata_2d, ['u10','v10'], 'MyTitle', 'filepref')
+# viz_obj.plot_2d_data_np(npdata_2d, ['u10','v10'], 'MyTitle', 'filepref')
+viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'MyTitle', 'filepref', plot_mode=PlotMode.RASTER)
+viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'MyTitle', 'filepref', plot_mode=PlotMode.CONTOUR)
+viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'MyTitle', 'filepref', plot_mode=PlotMode.MERGED)
 print("Done!")
-##
-
