@@ -68,6 +68,7 @@ class EOAImageVisualizer:
         self._lats = lats
         self._lons = lons
         self._fig_prop = (bbox[1]-bbox[0])/(bbox[3]-bbox[2])
+        self._contour_labels = False
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
 
@@ -133,7 +134,7 @@ class EOAImageVisualizer:
                 if self._contour_labels:
                     c_ax.contour(c_img, self._contour_labels, colors='r', extent=self._extent, transform=self._projection)
                 else:
-                    c_ax.contour(c_img,  colors='r', extent=self._extent, transform=self._projection)
+                    c_ax.contour(c_img, extent=self._extent, transform=self._projection)
 
         if len(self._additional_polygons) > 0:
             pol_lats = []
