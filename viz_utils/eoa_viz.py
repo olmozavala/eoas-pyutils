@@ -4,7 +4,7 @@ from os.path import join
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.colors import LogNorm
-from proj_utils.common import create_folder
+from proj_utils.io_common import create_folder
 from viz_utils.constants import PlotMode, BackgroundType
 import pylab
 import numpy as np
@@ -55,8 +55,8 @@ class EOAImageVisualizer:
     def add_colorbar(self, fig, im, ax, show_color_bar, label=""):
         # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.colorbar.html
         if show_color_bar:
-            font_size_cbar = self._font_size * .6
-            cbar = fig.colorbar(im, ax=ax, shrink=0.7)
+            font_size_cbar = self._font_size * .5
+            cbar = fig.colorbar(im, ax=ax, shrink=.93)
             cbar.ax.tick_params(labelsize=font_size_cbar)
             if label != "":
                 cbar.set_label(label, fontsize=font_size_cbar*1.2)
@@ -64,7 +64,7 @@ class EOAImageVisualizer:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
 
     def select_colormap(self, field_name):
-        if field_name in ('temp', 'sst', 'temperature'):
+        if 'temp' in field_name or 'sst' in field_name:
             return cmocean.cm.thermal
         if field_name in ('ssh', 'srfhgt'):
             return cmocean.cm.deep
@@ -110,8 +110,11 @@ class EOAImageVisualizer:
             c_ax.contour(c_img)
 
         gl = c_ax.gridlines(draw_labels=True, color='grey', alpha=0.5, linestyle='--')
+        # gl.xlabel_style = {'size': 10, 'color': '#0000FF', 'weight':'bold'}
+        gl.xlabel_style = {'size': int(self._font_size/2)}
+        gl.ylabel_style = {'size': int(self._font_size/2)}
         gl.top_labels = False
-        gl.left_labels = False
+        gl.right_labels = False
 
         return im
 
@@ -263,3 +266,4 @@ class EOAImageVisualizer:
         file_name = F'{file_name_prefix}_{c_slice_txt:04d}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
+
