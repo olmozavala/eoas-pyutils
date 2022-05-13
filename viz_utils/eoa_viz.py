@@ -87,20 +87,13 @@ class EOAImageVisualizer:
         # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.colorbar.html
         if show_color_bar:
             font_size_cbar = self._font_size * .5
-            cbar = fig.colorbar(im, ax=ax, shrink=.93)
+            # TODO how to make this automatic and works always
+            cbar = fig.colorbar(im, ax=ax, shrink=.7)
             cbar.ax.tick_params(labelsize=font_size_cbar)
             if label != "":
                 cbar.set_label(label, fontsize=font_size_cbar*1.2)
             else:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
-
-    def select_colormap(self, field_name):
-        if 'temp' in field_name or 'sst' in field_name:
-            return cmocean.cm.thermal
-        if field_name in ('ssh', 'srfhgt'):
-            return cmocean.cm.deep
-        if field_name in ('u', 'v', 'u-vel.', 'v-vel.'):
-            return cmocean.cm.speed
 
     def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan) -> None:
         """
@@ -276,6 +269,7 @@ class EOAImageVisualizer:
         It uses rows for each depth, and columns for each variable
         """
         create_folder(self._output_folder)
+        orig_cmap = cmap
 
         # If the user do not requires any z-leve, then all are plotted
         if len(z_levels) == 0:
@@ -312,8 +306,16 @@ class EOAImageVisualizer:
                 if not(np.all(np.isnan(maxcbar))):
                     c_maxcbar = maxcbar[idx_var]
 
-                if self._auto_colormap and cmap is None:
+                # By default we select the colorbar from the name of the variable
+                if self._auto_colormap and orig_cmap is None:
                     cmap = select_colormap(c_var)
+                else:
+                    # If there is an array of colormaps we select the one for this field
+                    if type(orig_cmap) is list:
+                        cmap = orig_cmap[idx_var]
+                    else:
+                        # If it is just one cmap, then we use it for all the fields
+                        cmap = orig_cmap
 
                 im = self.plot_slice_eoa(np_variables[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
                                          mincbar=c_mincbar, maxcbar=c_maxcbar)
@@ -360,11 +362,11 @@ class EOAImageVisualizer:
                         show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
 
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
-                            file_name_prefix='', cmap='viridis',  flip_data=False,
+                            file_name_prefix='', cmap=None,  flip_data=False,
                             rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
-        :param np_variables: Numpy variables. They can be with shape [fields, x, y] or just a single field with shape [x,y]
+        :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]
         :param var_names:
         :param title:
         :param file_name_prefix:
