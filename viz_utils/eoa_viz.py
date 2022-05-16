@@ -31,13 +31,15 @@ def select_colormap(field_name):
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
         return cmocean.cm.thermal
+    elif np.any([field_name.find(x) != -1 for x in ('vorticity', 'vort')]):
+        return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
     elif field_name.find('error') != -1:
         return cmocean.cm.diff
-    elif np.any([field_name.find(x) != -1 for x in ('binary')]):
+    elif field_name.find('binary') != -1:
         return cmocean.cm.oxy
-    elif np.any([field_name.find(x) != -1 for x in ('u', 'v', 'u-vel.', 'v-vel.')]):
+    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity')]):
         return cmocean.cm.speed
 
 
@@ -302,9 +304,15 @@ class EOAImageVisualizer:
 
                 # Here we chose the min and max colorbars for each field
                 if not(np.all(np.isnan(mincbar))):
-                    c_mincbar = mincbar[idx_var]
+                    if type(mincbar) is list:
+                        c_mincbar = mincbar[idx_var]
+                    else:
+                        c_mincbar = mincbar
                 if not(np.all(np.isnan(maxcbar))):
-                    c_maxcbar = maxcbar[idx_var]
+                    if type(mincbar) is list:
+                        c_maxcbar = maxcbar[idx_var]
+                    else:
+                        c_maxcbar = maxcbar
 
                 # By default we select the colorbar from the name of the variable
                 if self._auto_colormap and orig_cmap is None:
