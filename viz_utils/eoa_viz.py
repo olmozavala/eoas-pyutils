@@ -9,6 +9,7 @@ from viz_utils.constants import PlotMode, BackgroundType
 import pylab
 import numpy as np
 import cmocean
+import shapely
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -140,7 +141,10 @@ class EOAImageVisualizer:
             pol_lats = []
             pol_lons = []
             for c_polygon in self._additional_polygons:
-                x,y = c_polygon.exterior.xy
+                if isinstance(c_polygon, shapely.geometry.linestring.LineString):
+                    x,y = c_polygon.xy
+                elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
+                    x, y = c_polygon.exterior.xy
                 pol_lats += y
                 pol_lons += x
                 c_ax.plot(x,y, transform=self._projection, c='r')
