@@ -1,10 +1,13 @@
+import os
+from PIL import Image
+import cv2
 from os import listdir
 from os.path import join
 
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.colors import LogNorm
-from proj_utils.common import create_folder
+from proj_utils.io_common import create_folder
 from viz_utils.constants import PlotMode, BackgroundType
 import pylab
 import numpy as np
@@ -29,13 +32,15 @@ def select_colormap(field_name):
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
         return cmocean.cm.thermal
+    elif np.any([field_name.find(x) != -1 for x in ('vorticity', 'vort')]):
+        return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
     elif field_name.find('error') != -1:
         return cmocean.cm.diff
-    elif np.any([field_name.find(x) != -1 for x in ('binary')]):
+    elif field_name.find('binary') != -1:
         return cmocean.cm.oxy
-    elif np.any([field_name.find(x) != -1 for x in ('u', 'v', 'u-vel.', 'v-vel.')]):
+    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity')]):
         return cmocean.cm.speed
 
 
@@ -56,7 +61,7 @@ class EOAImageVisualizer:
     _auto_colormap = True  # Selects the colormap based on the name of the field
     _show_var_names = False  # Includes the name of the field name in the titles
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
-
+    _norm = None  # Use to normalize the colormap. For example with LogNorm
     def __init__(self, disp_images=True, output_folder='output',
                  lats=[-90,90], lons =[-180,180],
                  projection=ccrs.PlateCarree(), **kwargs):
@@ -84,8 +89,9 @@ class EOAImageVisualizer:
     def add_colorbar(self, fig, im, ax, show_color_bar, label=""):
         # https://matplotlib.org/api/_as_gen/matplotlib.pyplot.colorbar.html
         if show_color_bar:
-            font_size_cbar = self._font_size * .6
-            cbar = fig.colorbar(im, ax=ax, shrink=0.7)
+            font_size_cbar = self._font_size * .5
+            # TODO how to make this automatic and works always
+            cbar = fig.colorbar(im, ax=ax, shrink=.7)
             cbar.ax.tick_params(labelsize=font_size_cbar)
             if label != "":
                 cbar.set_label(label, fontsize=font_size_cbar*1.2)
@@ -123,9 +129,9 @@ class EOAImageVisualizer:
                 im = c_ax.contourf(self._lons, self._lats, c_img, num_colors=255, cmap='inferno', extent=self._extent)
             else:
                 if np.isnan(mincbar):
-                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection)
+                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=self._norm)
                 else:
-                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection)
+                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection, norm=self._norm)
 
         if mode == PlotMode.CONTOUR or mode == PlotMode.MERGED:
             c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
@@ -262,13 +268,14 @@ class EOAImageVisualizer:
         return ax
 
     def plot_3d_data_npdict(self, np_variables:list, var_names:list, z_levels= [], title='',
-                          file_name_prefix='', cmap='viridis', z_names = [],
+                          file_name_prefix='', cmap=None, z_names = [],
                           show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         """
         Plots multiple z_levels for multiple fields.
         It uses rows for each depth, and columns for each variable
         """
         create_folder(self._output_folder)
+        orig_cmap = cmap
 
         # If the user do not requires any z-leve, then all are plotted
         if len(z_levels) == 0:
@@ -301,12 +308,26 @@ class EOAImageVisualizer:
 
                 # Here we chose the min and max colorbars for each field
                 if not(np.all(np.isnan(mincbar))):
-                    c_mincbar = mincbar[idx_var]
+                    if type(mincbar) is list:
+                        c_mincbar = mincbar[idx_var]
+                    else:
+                        c_mincbar = mincbar
                 if not(np.all(np.isnan(maxcbar))):
-                    c_maxcbar = maxcbar[idx_var]
+                    if type(mincbar) is list:
+                        c_maxcbar = maxcbar[idx_var]
+                    else:
+                        c_maxcbar = maxcbar
 
-                if self._auto_colormap:
+                # By default we select the colorbar from the name of the variable
+                if self._auto_colormap and orig_cmap is None:
                     cmap = select_colormap(c_var)
+                else:
+                    # If there is an array of colormaps we select the one for this field
+                    if type(orig_cmap) is list:
+                        cmap = orig_cmap[idx_var]
+                    else:
+                        # If it is just one cmap, then we use it for all the fields
+                        cmap = orig_cmap
 
                 im = self.plot_slice_eoa(np_variables[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
                                          mincbar=c_mincbar, maxcbar=c_maxcbar)
@@ -353,11 +374,11 @@ class EOAImageVisualizer:
                         show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
 
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
-                            file_name_prefix='', cmap='viridis',  flip_data=False,
+                            file_name_prefix='', cmap=None,  flip_data=False,
                             rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
-        :param np_variables: Numpy variables. They can be with shape [fields, x, y] or just a single field with shape [x,y]
+        :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]
         :param var_names:
         :param title:
         :param file_name_prefix:
@@ -387,3 +408,24 @@ class EOAImageVisualizer:
                         file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
                         show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
 
+
+    def make_video_from_images(self, input_folder, output_file, fps=24):
+        files = listdir(input_folder)
+        files.sort()
+
+        print(F"Generating video file: {output_file}")
+        out_video = -1
+        for i, file_name in enumerate(files[0:36]):
+            if i % 10 == 0:
+                print(F"Adding file # {i}: {file_name}")
+            c_file = join(input_folder, file_name)
+            im = Image.open(c_file)
+            np_im = np.asarray(im)[:, :, :3]
+            if i == 0:
+                video_size = (np_im.shape[1], np_im.shape[0])
+                out_video = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc(*'mp4v'), fps, video_size, True)
+            out_video.write(np_im[:, :, ::-1])
+
+        out_video.release()
+        cv2.destroyAllWindows()
+        print("Done! yeah babe!")
