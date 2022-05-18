@@ -7,7 +7,7 @@ from os.path import join
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.colors import LogNorm
-from proj_utils.io_common import create_folder
+from io_utils.io_common import create_folder
 from viz_utils.constants import PlotMode, BackgroundType
 import pylab
 import numpy as np
