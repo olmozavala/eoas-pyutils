@@ -7,7 +7,7 @@ from os.path import join
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.colors import LogNorm
-from proj_utils.io_common import create_folder
+from io_utils.io_common import create_folder
 from viz_utils.constants import PlotMode, BackgroundType
 import pylab
 import numpy as np
@@ -45,7 +45,10 @@ def select_colormap(field_name):
 
 class EOAImageVisualizer:
     """This class makes plenty of plots assuming we are plotting Geospatial data (maps).
-    It is made to read xarrays, numpy arrays, and numpy arrays in dictionaries"""
+    It is made to read xarrays, numpy arrays, and numpy arrays in dictionaries
+    vizobj = new EOAImageVisualizer(disp_images=True, output_folder='output',
+                                    lats=[lats],lons=[lons])
+    """
     _COLORS = ['y', 'r', 'c', 'b', 'g', 'w', 'k', 'y', 'r', 'c', 'b', 'g', 'w', 'k']
     _figsize = 8
     _font_size = 30
@@ -61,6 +64,9 @@ class EOAImageVisualizer:
     _show_var_names = False  # Includes the name of the field name in the titles
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
     _norm = None  # Use to normalize the colormap. For example with LogNorm
+
+    # vizobj = EOAImageVisualizer(disp_images=True, output_folder='output',
+    #                                 lats=[lats],lons=[lons])
     def __init__(self, disp_images=True, output_folder='output',
                  lats=[-90,90], lons =[-180,180],
                  projection=ccrs.PlateCarree(), **kwargs):

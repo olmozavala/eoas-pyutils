@@ -19,12 +19,9 @@ def all_files_in_folder(input_folder, file_ext=None):
     """
     paths = []
     file_names = []
-    file_ext = None
     for root,d_names,f_names in os.walk(input_folder):
         for f in f_names:
-            if file_ext is None or f.find(file_ext) != 0:
-                paths.append(os.path.join(root, f))
-                file_names.append(f)
+            if file_ext is None or f.find(file_ext) != -1:
                 paths.append(os.path.join(root, f))
                 file_names.append(f)
 
