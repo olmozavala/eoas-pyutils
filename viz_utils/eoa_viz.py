@@ -345,7 +345,7 @@ class EOAImageVisualizer:
                 self.add_colorbar(fig, im, ax, show_color_bar)
 
         plt.tight_layout(pad=.5)
-        file_name = F'{file_name_prefix}_{c_slice_txt:04d}'
+        file_name = F'{file_name_prefix}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
 

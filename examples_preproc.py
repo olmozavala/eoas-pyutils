@@ -3,6 +3,7 @@ import numpy as np
 
 from viz_utils.eoa_viz import EOAImageVisualizer
 from proc_utils.comp_fields import vorticity
+from proc_utils.proj import haversineForGrid
 
 ## ------------ Composite fields -----------
 print("Reading data...")
@@ -13,12 +14,16 @@ print(ds.info())
 lons = ds.lon
 lats = ds.lat
 
-## ------------ Composite fields -----------
+## ------------ Vorticity -----------
 vort = vorticity(ds.water_u, ds.water_v)
+grid = np.meshgrid(lons, lats)
+grid_dist = haversineForGrid(grid) / 1000
+vort_norm = vorticity(ds.water_u, ds.water_v, grid_dist)
 mag = np.sqrt(ds.water_u**2 + ds.water_v**2)
 viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
 viz_obj.plot_3d_data_npdict({'vort':vort[0,:]}, ['vort'], [0], 'Vorticity', 'myplot', mincbar=[-.5], maxcbar=[.5])
 viz_obj.plot_3d_data_npdict({'mag':mag[0,:]}, ['mag'], [0], 'Magnitude', 'myplot')
+viz_obj.plot_3d_data_npdict({'vortnorm':vort_norm[0,:]}, ['vort norm'], [0], 'Vorticity normalized', 'myplot', mincbar=[-.5], maxcbar=[.5])
 
 ## ------------ Cropping fields -----------
 ds_crop = ds.sel(lat=slice(24,30), lon=slice(-84, -78))  # Cropping by value
