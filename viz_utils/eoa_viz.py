@@ -12,6 +12,7 @@ from viz_utils.constants import PlotMode, BackgroundType
 import pylab
 import numpy as np
 import cmocean
+import shapely
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -152,7 +153,10 @@ class EOAImageVisualizer:
             pol_lats = []
             pol_lons = []
             for c_polygon in self._additional_polygons:
-                x,y = c_polygon.exterior.xy
+                if isinstance(c_polygon, shapely.geometry.linestring.LineString):
+                    x,y = c_polygon.xy
+                elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
+                    x, y = c_polygon.exterior.xy
                 pol_lats += y
                 pol_lons += x
                 c_ax.plot(x,y, transform=self._projection, c='r')
@@ -347,7 +351,7 @@ class EOAImageVisualizer:
                 self.add_colorbar(fig, im, ax, show_color_bar)
 
         plt.tight_layout(pad=.5)
-        file_name = F'{file_name_prefix}_{c_slice_txt:04d}'
+        file_name = F'{file_name_prefix}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
 
