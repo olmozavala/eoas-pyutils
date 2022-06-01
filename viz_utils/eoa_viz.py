@@ -64,6 +64,9 @@ class EOAImageVisualizer:
     _auto_colormap = True  # Selects the colormap based on the name of the field
     _show_var_names = False  # Includes the name of the field name in the titles
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
+    # If you want to add a streamplot of a vector field. It must be a dictionary with keys x,y,u,v
+    # and optional density, color, cmap, arrowsize, arrowstyle, minlength
+    _vector_field = None
     _norm = None  # Use to normalize the colormap. For example with LogNorm
 
     # vizobj = EOAImageVisualizer(disp_images=True, output_folder='output',
@@ -163,6 +166,33 @@ class EOAImageVisualizer:
 
             #  Adds a threshold to the plot to see the polygons
             c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
+
+        if self._vector_field != None:
+            try:
+                u = self._vector_field['u']
+                v = self._vector_field['v']
+                x = self._vector_field['x']
+                y = self._vector_field['y']
+                vec_keys = self._vector_field.keys()
+                c = 'r'
+                density = 1
+                linewidth = 3
+                vec_cmap = cmocean.cm.solar
+                if 'color' in vec_keys:
+                    c = self._vector_field['color']
+                if 'density' in vec_keys:
+                    density = self._vector_field['density']
+                if 'linewidth' in vec_keys:
+                    linewidth = self._vector_field['linewidth']
+                if 'cmap' in vec_keys:
+                    vec_cmap = self._vector_field['cmap']
+                c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
+                c_ax.streamplot(x, y, u, v, transform=self._projection, density=density, color=c,
+                                cmap=vec_cmap, linewidth=linewidth)
+
+            except Exception as e:
+                print(F"Couldn't add vector field e:{e}")
+
 
         gl = c_ax.gridlines(draw_labels=True, color='grey', alpha=0.5, linestyle='--')
         # gl.xlabel_style = {'size': self._font_size/2, 'color': '#aaaaaa', 'weight':'bold'}
@@ -413,7 +443,6 @@ class EOAImageVisualizer:
         self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
                         file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
                         show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
-
 
     def make_video_from_images(self, input_folder, output_file, fps=24):
         files = listdir(input_folder)
