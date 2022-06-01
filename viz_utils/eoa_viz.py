@@ -27,7 +27,7 @@ def select_colormap(field_name):
     Returns:
 
     '''
-    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt')]):
+    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el')]):
         # cmaps_fields.append(cmocean.cm.deep_r)
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):

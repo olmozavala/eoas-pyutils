@@ -36,7 +36,7 @@ def vorticity(u, v, dist_grid=None):
         if dist_grid is None:
             vort = np.diff(v, axis=3)[:,:, : -1, :] - np.diff(u, axis=2)[:, :, :, :-1]
         else:
-            vort = np.diff(v, axis=3)[:, :, : -1, :] / dist_grid[0] - np.diff(u, axis=2)[:, :, :, -1] / dist_grid[1]
+            vort = np.diff(v, axis=3)[:, :, : -1, :] / dist_grid[0] - np.diff(u, axis=2)[:, :, :, :-1] / dist_grid[1]
 
         vort_dims = vort.shape
         final_vort[:, :, :vort_dims[2], :vort_dims[3]] = vort
