@@ -43,6 +43,7 @@ class EOAImageVisualizer:
         self._lons = lons
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
+            print(self.__dict__["_" + arg_name])
 
     def __getattr__(self, attr):
         '''Generic getter for all the properties of the class'''
@@ -203,6 +204,28 @@ class EOAImageVisualizer:
 
         ax.add_feature(states_provinces, edgecolor='gray')
         return ax
+
+    def plot_scatter_data(self, lats=None, lons=None, bbox=None, s=1, c='blue', cmap='plasma', title=''):
+        '''
+        This function plots points in a map
+        :param bbox:
+        :return:
+        '''
+        if bbox is None:
+            bbox = (-180, 180, -90, 90)
+        if lats is None:
+            lats = self.lats
+        if lons is None:
+            lons = self.lons
+
+        fig, ax = plt.subplots(1, 1, figsize=(self._figsize, self._figsize), subplot_kw={'projection': ccrs.PlateCarree()})
+        ax.set_extent(bbox)  # If we do not set this, it will cropp it to the limits of the locations
+        ax.gridlines()
+        im = ax.scatter(lons, lats, s=s, c=c, cmap=cmap)
+        fig.colorbar(im, ax=ax, shrink=0.7)
+        ax.coastlines()
+        plt.title(title)
+        plt.show()
 
     def plot_3d_data_npdict(self, np_variables:list, var_names:list, z_levels= [], title='',
                           file_name_prefix='', cmap='viridis', z_names = [], flip_data=True,
