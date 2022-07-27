@@ -157,13 +157,16 @@ class EOAImageVisualizer:
             pol_lats = []
             pol_lons = []
             for c_polygon in self._additional_polygons:
-                if isinstance(c_polygon, shapely.geometry.linestring.LineString):
+                if isinstance(c_polygon, shapely.geometry.linestring.LineString) or isinstance(c_polygon, shapely.geometry.linestring.Point):
                     x,y = c_polygon.xy
                 elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
                     x, y = c_polygon.exterior.xy
                 pol_lats += y
                 pol_lons += x
-                c_ax.plot(x,y, transform=self._projection, c='r')
+                if isinstance(c_polygon, shapely.geometry.linestring.Point):
+                    c_ax.scatter(x, y, transform=self._projection, c='r')
+                else:
+                    c_ax.plot(x,y, transform=self._projection, c='y')
 
             #  Adds a threshold to the plot to see the polygons
             c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
