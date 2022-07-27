@@ -1,6 +1,19 @@
 import numpy as np
 from proc_utils.proj import haversine
 
+def coriolis(lats):
+    """
+    Obtains the coriolis parameter from a vector of latitudes
+    Args:
+        lats:
+
+    Returns:
+
+    """
+    omeg = 2*np.pi/(24*3600)
+    f = 2*omeg*np.sin(np.deg2rad(lats))
+    return f
+
 
 def vorticity(u, v, dist_grid=None):
     '''
