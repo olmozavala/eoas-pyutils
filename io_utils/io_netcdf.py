@@ -47,6 +47,43 @@ def read_netcdf(file_name:str, fields: list,  replace_to_nan=True, rename_fields
 
     return nc_fields
 
+def xr_summary(self, ds):
+    """ Prints a summary of the netcdf (global attributes, variables, etc)
+    :param ds:
+    :return:
+    """
+    print("\n========== Global attributes =========")
+    for name in ds.attrs:
+        print(F"{name} = {getattr(ds, name)}")
+
+    print("\n========== Dimensions =========")
+    for name in ds.dims:
+        print(F"{name}: {ds[name].shape}")
+
+    print("\n========== Coordinates =========")
+    for name in ds.coords:
+        print(F"{name}: {ds[name].shape}")
+
+    print("\n========== Variables =========")
+    for cur_variable_name in ds.variables:
+        cur_var = ds[cur_variable_name]
+        print(F"{cur_variable_name}: {cur_var.dims} {cur_var.shape}")
+
+def nc_summary(self, ds):
+    """ Prints a summary of the netcdf (global attributes, variables, etc)
+    :param ds:
+    :return:
+    """
+    print("\n========== Global attributes =========")
+    for name in ds.ncattrs():
+        print(F"{name} = {getattr(ds, name)}")
+
+    print("\n========== Variables =========")
+    netCDFvars = ds.variables
+    for cur_variable_name in netCDFvars.keys():
+        cur_var = ds.variables[cur_variable_name]
+        print(F"Dimensions for {cur_variable_name}: {cur_var.dimensions} {cur_var.shape}")
+
 def read_multiple_netcdf_xarr(file_names:str, fields: list):
     ds = []
     for c_file in file_names:

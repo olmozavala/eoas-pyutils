@@ -6,6 +6,13 @@ import numpy as np
 gom_bnd = np.array([[-87.5, 21.15], [-84.15, 22.35], [-82.9, 22.9], [-81, 22.9], [-81, 27], [-82.5, 32.5], [-76.5, 32.5], [-76.5, 16.5], [-90, 16.5], [-87.5, 21.15]])
 gom_path = path.Path(gom_bnd)
 
+def coriolis(lats):
+    """ Computes the coriolis parameter from a list of lats """
+    Omeg=2*np.pi/(24*3600);
+    f=2*Omeg*np.sin(np.deg2rad(Y));
+    return f
+
+
 def change_units(cc, lon, lat):
     """skimage functions extracts the contour but the paths are image indices
     and not (lon, lat)"""
