@@ -3,15 +3,16 @@ import keyring
 from calendar import monthrange
 
 username = 'ozavalaromero'
-password = keyring.get_password("aviso",username)
+# password = keyring.get_password("aviso",username)
+password = "sopascopGoffish123"
 
 output_folder = "/Net/work/ozavala/GOFFISH/AVISO"
 lon = [262, 305]  # [-98, -60]
 lat = [7.5, 50]
 
 # https://resources.marine.copernicus.eu/product-detail/SEALEVEL_GLO_PHY_L4_MY_008_047/INFORMATION
-for year in range(2001, 2023):
-    for month in range(1, 13):
+for year in range(2022, 2023):
+    for month in range(3, 4):
         outfile = '%d-%02d.nc' % (year, month)
 
         args = F'--motu http://my.cmems-du.eu/motu-web/Motu ' \
