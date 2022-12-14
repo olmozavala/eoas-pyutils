@@ -51,20 +51,22 @@ class EOAImageVisualizer:
     vizobj = new EOAImageVisualizer(disp_images=True, output_folder='output',
                                     lats=[lats],lons=[lons])
     """
+    # ------- 'Global attributes' defined at init ------------
     _COLORS = ['y', 'r', 'c', 'b', 'g', 'w', 'k', 'y', 'r', 'c', 'b', 'g', 'w', 'k']
     _figsize = 8
     _font_size = 30
     _units = ''
     _max_imgs_per_row = 4
-    _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
-    _maxcbar  = np.nan
-    _flip_data = True
     _eoas_pyutils_path =  './eoas_pyutils'# This is the path where the eoas_utils folder is stored with respect to the main project
-    _contourf = False  # When plotting non-regular grids and need precision
     _background = BackgroundType.BLUE_MARBLE_LR  # Select the background to use
     _auto_colormap = True  # Selects the colormap based on the name of the field
     _show_var_names = False  # Includes the name of the field name in the titles
+    _contourf = False  # When plotting non-regular grids and need precision
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
+    # ------ 'Local' attributes defined at each plot function
+    _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
+    _maxcbar  = np.nan
+    _flip_data = True
     # If you want to add a streamplot of a vector field. It must be a dictionary with keys x,y,u,v
     # and optional density, color, cmap, arrowsize, arrowstyle, minlength
     _vector_field = None
@@ -137,7 +139,7 @@ class EOAImageVisualizer:
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
-                im = c_ax.contourf(self._lons, self._lats, c_img, num_colors=255, cmap='inferno', extent=self._extent)
+                im = c_ax.contourf(self._lons, self._lats, c_img, num_colors=255, cmap=cmap, extent=self._extent)
             else:
                 if np.isnan(mincbar):
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=self._norm)
