@@ -17,7 +17,7 @@ def intersect_polygon_grid(grid, lats, lons, geo_poly):
     for i in range(0, len(lats)):
         for j in range(0, len(lons)):
             if not np.isnan(grid[i, j]):
-                grid[i, j] = gom_path.contains_points(([[lons[j], lats[i]]]))
+                grid[i, j] = gom_path.contains_points(([[lons[j], lats[i]]])).item()
 
     return grid
 

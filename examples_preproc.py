@@ -9,7 +9,7 @@ from viz_utils.eoa_viz import EOAImageVisualizer
 from viz_utils.constants import PlotMode, BackgroundType
 from proc_utils.comp_fields import vorticity, coriolis
 from proc_utils.proj import haversineForGrid
-from proc_utils.geometries import histogram_from_locations
+from proc_utils.geometries import histogram_from_locations, intersect_polygon_grid
 from proc_utils.gom import lc_from_ssh
 
 from shapely.geometry import LineString
@@ -57,7 +57,7 @@ file_name = "test_data/hycom_gom.nc"
 ds = xr.open_dataset(file_name, decode_times=False)
 lats = ds.lat.data
 lons = ds.lon.data
-viz_obj = EOAImageVisualizer(disp_images=True, output_folder='output', lats=lats, lons=lons)  # For Python console
+viz_obj = EOAImageVisualizer(disp_images=True, output_folder='output', lats=lats, lons=lons, eoas_pyutils_path=".")  # For Python console
 viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field Example (temp)', file_name_prefix='Test', z_levels=[0])
 
 ## ----------------- Histogram from locations
@@ -87,6 +87,7 @@ polygon_shape = Polygon(geom_poly)
 viz_obj.__setattr__('additional_polygons',[polygon_shape])
 viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field with geo_poly', file_name_prefix='Test', z_levels=[0])
 
+##
 print("Making the intersection...")
 grid_bin = intersect_polygon_grid(ds.water_temp[0,0,:,:], lats, lons, geom_poly)
 print("Done!")
