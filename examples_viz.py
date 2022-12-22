@@ -21,6 +21,7 @@ print(F"The fields available are: {read_field_names(input_file)}")
 fields = ['srfhgt', 'temp', 'u-vel.']   # Which fields to plot
 hycom_fields = read_hycom_fields(input_file, fields, layers)
 
+##
 print(F"The coords available are: {read_field_names(coords_file)}")
 coords = read_hycom_coords(coords_file, ['plon:', 'plat:'])
 lons = coords['plon']
@@ -28,7 +29,9 @@ lats = coords['plat']
 print("Done!")
 
 viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
+
 viz_obj.plot_3d_data_npdict(hycom_fields, ['temp','u-vel.'], [0], 'MyTitle', 'myplot')
+hycom_fields['temp']
 print("Done!")
 
 ## ------------ NetCDF 4D -----------

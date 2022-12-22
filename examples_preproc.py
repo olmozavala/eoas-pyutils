@@ -16,7 +16,7 @@ from shapely.geometry import LineString
 
 ## ============ Composite fields ===========
 print("Reading data...")
-input_file = "/home/olmozavala/Dropbox/TestData/netCDF/GoM/hycom_gomu_501_1993010100_t000.nc"
+input_file = "./test_data/hycom_gom.nc"
 ds = xr.open_dataset(input_file, decode_times=False)
 print(ds.info())
 # Reading specific field and layers
