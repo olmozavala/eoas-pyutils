@@ -101,3 +101,9 @@ viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'MyTitle', 'filepref', plot_mode=Plo
 viz_obj.__setattr__('vector_field', {'u':u,'v':v,'x':x,'y':y, 'density':2, 'color':vel, 'cmap':ccm.phase})
 viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'MyTitle', 'filepref', plot_mode=PlotMode.RASTER)
 
+
+##
+
+
+##
+

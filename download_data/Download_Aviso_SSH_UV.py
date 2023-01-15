@@ -1,18 +1,25 @@
 import subprocess
-import keyring
+import netrc
 from calendar import monthrange
+from io_utils.io_common import create_folder
 
-username = 'ozavalaromero'
-# password = keyring.get_password("aviso",username)
-password = "sopascopGoffish123"
+# You need to use your Copernicus credentials here
+secrets = netrc.netrc()
+username, account, password = secrets.hosts['AVISO']
 
-output_folder = "/Net/work/ozavala/GOFFISH/AVISO"
+# output_folder = "/Net/work/ozavala/GOFFISH/AVISO"
+output_folder = "./DownloadedData/AVISO"
+create_folder(output_folder)
+
 lon = [262, 305]  # [-98, -60]
 lat = [7.5, 50]
 
+years = range(2022, 2023)
+
 # https://resources.marine.copernicus.eu/product-detail/SEALEVEL_GLO_PHY_L4_MY_008_047/INFORMATION
-for year in range(2022, 2023):
-    for month in range(3, 4):
+# Full range is Valid range is: [1993-01-01 00:00:00,2022-02-09 00:00:00].
+for year in years:
+    for month in range(1, 12):
         outfile = '%d-%02d.nc' % (year, month)
 
         args = F'--motu http://my.cmems-du.eu/motu-web/Motu ' \

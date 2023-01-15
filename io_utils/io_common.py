@@ -39,5 +39,11 @@ def str2bool(cstr: str) -> bool:
     """
     return cstr in ['True', 'true', 't', True]
 
+class dotdict(dict):
+    """dot.notation access to dictionary attributes"""
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
 if __name__ == '__main__':
     print(all_files_in_folder("/home/olmozavala/Dropbox/MyProjects/OZ_LIB/eoas-ai-template/test_data/GOMb0.04"))
