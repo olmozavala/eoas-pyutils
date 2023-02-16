@@ -7,18 +7,17 @@ from io_utils.io_common import create_folder, dotdict
 from subset_dataset_oisst import oisst
 import subprocess
 
-
 ##% This program downloads SST data using PODAAC
 # 1) Install PODAAC pip install podaac-data-subscriber
 # https://github.com/podaac/data-subscriber/blob/main/README.md
 
-# THE PODAAC CODE HAS BEEN UPDATED AND IT DOESN'T WORK ANYMORE. PLEASE READ THE DOCS AND UPDATE THIS FILES.
+# THE PODAAC CODE HAS BEEN UPDATED AND IT DOESN'T WORK ANYMORE. PLEASE READ THE DOCS AND UPDATE THIS FILE.
 # ALSO MAKE A UNIT TEST TO  CATCH WHEN THINGS STOP WORKING
 
 # You can't run this code from the Python Console (paths problems), run it 'normally'.
 
 # root_output_folder = "/Net/work/ozavala/GOFFISH/SST/OISST"
-root_output_folder = "./Data/SST/OISST"
+root_output_folder = "../Data/SST/OISST"
 
 TOT_PROC = 1
 start_date = datetime.date(2011,12,1)
@@ -68,6 +67,6 @@ def par_download(proc_id):
 par_download(1)
 
 ## Parallel
-p = Pool(TOT_PROC)
-p.map(par_download, range(TOT_PROC))
+# p = Pool(TOT_PROC)
+# p.map(par_download, range(TOT_PROC))
 

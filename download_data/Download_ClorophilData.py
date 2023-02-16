@@ -11,8 +11,8 @@ import subprocess
 ## This program dowloads Clorophil Data
 ## NOT WORKING
 
-output_folder = "/Net/work/ozavala/GOFFISH/CHLORA/CEDA"
-output_folder = "./DownloadedData/CHLORA/CEDA"
+# output_folder = "/Net/work/ozavala/GOFFISH/CHLORA/CEDA"
+output_folder = "../Data/CHLA/CEDA"
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)

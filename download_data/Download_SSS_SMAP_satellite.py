@@ -6,8 +6,8 @@ from io_utils.io_common import create_folder
 
 ## This program dowloads SSS data. TODO the data is not cropped
 
-output_folder = "/Net/work/ozavala/GOFFISH/SSS/SMAP_Global"
-output_folder = "./DownloadedData/SSS/SMAP_Global"
+# output_folder = "/Net/work/ozavala/GOFFISH/SSS/SMAP_Global"
+output_folder = "../Data/AVISO/SSS/SMAP_Global"
 years = range(2021,2023)
 TOT_PROC = 10
 

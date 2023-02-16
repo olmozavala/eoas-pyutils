@@ -8,7 +8,7 @@ secrets = netrc.netrc()
 username, account, password = secrets.hosts['AVISO']
 
 # output_folder = "/Net/work/ozavala/GOFFISH/AVISO"
-output_folder = "./DownloadedData/AVISO"
+output_folder = "../Data/AVISO/SSH"
 create_folder(output_folder)
 
 lon = [262, 305]  # [-98, -60]

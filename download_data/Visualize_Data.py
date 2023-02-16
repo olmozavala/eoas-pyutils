@@ -10,8 +10,6 @@ bm_extent = (-180, 180, -90, 90)
 blue_marble = '/home/olmozavala/Dropbox/TutorialsByMe/Python/PythonExamples/Python/MatplotlibEx/map_backgrounds/bluemarble_5400x2700.jpg'
 bm_im = plt.imread(blue_marble)  # BATHYMETRY BLACK LAND
 
-
-
 ## ------ AVISO ADT ------
 date_fmt = "%Y-%m-%d"
 input_folder = "/Net/work/ozavala/GOFFISH/AVISO"
