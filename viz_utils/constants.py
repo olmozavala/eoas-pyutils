@@ -13,4 +13,5 @@ class BackgroundType(Enum):
     BATHYMETRY = 3
     TOPO = 4
     CARTO_DEF = 5
+    NONE = 6
 

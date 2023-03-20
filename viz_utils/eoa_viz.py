@@ -89,7 +89,7 @@ class EOAImageVisualizer:
         self._contour_labels = False
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
-            print(self.__dict__["_" + arg_name])
+            print(f'{"_" + arg_name} = {self.__dict__["_" + arg_name]}')
 
     def __getattr__(self, attr):
         '''Generic getter for all the properties of the class'''
@@ -126,6 +126,8 @@ class EOAImageVisualizer:
 
         if self._background == BackgroundType.CARTO_DEF:
             c_ax.stock_img()
+        elif self._background == BackgroundType.NONE:
+            print("No background")
         else:
             if self._background == BackgroundType.BLUE_MARBLE_LR:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bluemarble.png'))
@@ -139,7 +141,7 @@ class EOAImageVisualizer:
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
-                im = c_ax.contourf(self._lons, self._lats, c_img, num_colors=255, cmap=cmap, extent=self._extent)
+                im = c_ax.contourf(self._lons, self._lats, c_img, 255, cmap=cmap, extent=self._extent)
             else:
                 if np.isnan(mincbar):
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=self._norm)

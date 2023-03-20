@@ -6,7 +6,7 @@ from hycom.info import read_field_names
 import xarray as xr
 import numpy as np
 from viz_utils.eoa_viz import EOAImageVisualizer
-from viz_utils.constants import PlotMode
+from viz_utils.constants import PlotMode, BackgroundType
 from shapely.geometry import LineString, Polygon
 import cmocean.cm as ccm
 
@@ -28,7 +28,9 @@ lons = coords['plon']
 lats = coords['plat']
 print("Done!")
 
-viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
+# Plotting with contourf (slow but accurate)
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".",
+                             contourf=True, background=BackgroundType.NONE)
 
 viz_obj.plot_3d_data_npdict(hycom_fields, ['temp','u-vel.'], [0], 'MyTitle', 'myplot')
 hycom_fields['temp']
