@@ -165,7 +165,7 @@ class EOAImageVisualizer:
             pol_lons = []
             for c_polygon in self._additional_polygons:
                 if isinstance(c_polygon, shapely.geometry.linestring.LineString) or isinstance(c_polygon, shapely.geometry.linestring.Point):
-                    x,y = c_polygon.xy
+                    x, y = c_polygon.xy
                 elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
                     x, y = c_polygon.exterior.xy
                 pol_lats += y
