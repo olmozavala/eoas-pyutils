@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import path
 
-def intersect_polygon_grid(grid, lats, lons, geo_poly):
+def intersect_polygon_grid(grid, lats, lons, geo_poly, value=1):
     '''
     It generates a binary grid with the intersected locations of a geo_poly
     Args:
@@ -17,7 +17,7 @@ def intersect_polygon_grid(grid, lats, lons, geo_poly):
     for i in range(0, len(lats)):
         for j in range(0, len(lons)):
             if not np.isnan(grid[i, j]):
-                grid[i, j] = gom_path.contains_points(([[lons[j], lats[i]]])).item()
+                grid[i, j] += gom_path.contains_points(([[lons[j], lats[i]]])).item() * value
 
     return grid
 

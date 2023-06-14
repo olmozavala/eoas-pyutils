@@ -81,6 +81,8 @@ class EOAImageVisualizer:
         self._disp_images = disp_images
         self._output_folder = output_folder
         self._projection = projection
+        if np.amax(lons) > 180:
+            lons = lons - 360
         bbox = self.getExtent(lats, lons)
         self._extent = bbox
         self._lats = lats
@@ -163,7 +165,7 @@ class EOAImageVisualizer:
             pol_lons = []
             for c_polygon in self._additional_polygons:
                 if isinstance(c_polygon, shapely.geometry.linestring.LineString) or isinstance(c_polygon, shapely.geometry.linestring.Point):
-                    x,y = c_polygon.xy
+                    x, y = c_polygon.xy
                 elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
                     x, y = c_polygon.exterior.xy
                 pol_lats += y
