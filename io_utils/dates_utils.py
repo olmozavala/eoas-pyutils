@@ -37,9 +37,9 @@ def get_day_of_year_from_month_and_day(month, day_of_month, year=datetime.now().
 def get_month_and_day_of_month_from_day_of_year(day_of_year, year=datetime.now().year):
     """
     Gets a list of integers with the days of the month, starting from 0 and from the day of the year
-    :param month:
-    :param year:
-    :return:
+    :param month: Month, starting from 1
+    :param year: Year
+    :return: Day of the month, starting from 1
     """
     date_jan = date(year, 1, 1)
     curr_date = date_jan + timedelta(days=int(day_of_year)-1)

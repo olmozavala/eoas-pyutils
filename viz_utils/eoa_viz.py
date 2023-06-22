@@ -13,6 +13,7 @@ import pylab
 import numpy as np
 import cmocean
 import shapely
+import xarray
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -81,6 +82,8 @@ class EOAImageVisualizer:
         self._disp_images = disp_images
         self._output_folder = output_folder
         self._projection = projection
+        if np.amax(lons) > 180:
+            lons = lons - 360
         bbox = self.getExtent(lats, lons)
         self._extent = bbox
         self._lats = lats
@@ -89,7 +92,7 @@ class EOAImageVisualizer:
         self._contour_labels = False
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
-            print(self.__dict__["_" + arg_name])
+            print(f'{"_" + arg_name} = {self.__dict__["_" + arg_name]}')
 
     def __getattr__(self, attr):
         '''Generic getter for all the properties of the class'''
@@ -130,6 +133,8 @@ class EOAImageVisualizer:
             ax.set_facecolor("white")
         elif self._background == BackgroundType.BLACK:
             ax.set_facecolor("black")
+        elif self._background == BackgroundType.NONE:
+            print("No background")
         else:
             if self._background == BackgroundType.BLUE_MARBLE_LR:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bluemarble.png'))
@@ -165,7 +170,7 @@ class EOAImageVisualizer:
             pol_lons = []
             for c_polygon in self._additional_polygons:
                 if isinstance(c_polygon, shapely.geometry.linestring.LineString) or isinstance(c_polygon, shapely.geometry.linestring.Point):
-                    x,y = c_polygon.xy
+                    x, y = c_polygon.xy
                 elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
                     x, y = c_polygon.exterior.xy
                 pol_lats += y
@@ -303,19 +308,60 @@ class EOAImageVisualizer:
         plt.title(title)
         plt.show()
 
-    def plot_3d_data_npdict(self, np_variables:list, var_names:list, z_levels= [], title='',
+    def plot_4d_data_npdict(self, variables_dic:list, var_names:list, times=[], z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
                           show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         """
         Plots multiple z_levels for multiple fields.
-        It uses rows for each depth, and columns for each variable
+        It assumes the dimensions on the fields are (time, depth, lat, lon)
+        It calls plot_3d for every timestep, to it generates one image per timestep
+        It assumes all the fields have the same number of timesteps
+        Args:
+            variables_dic: numpy dictionary or xarray df with the fields
+            var_names: names of the fiels to be plotted
+            times: an index array of the times to be plotted
+            z_levels: which depth levels to plot
+            title: title of the plots
+            file_name_prefix: a file_prefix to use
+            cmap: a colormap to be used for all the fields
+            show_color_bar: if we want to display the colorbar
+            plot_mode:
+            mincbar:
+            maxcbar:
+        Returns:
+        """
+        if len(times) == 0:
+            times = range(variables_dic[var_names[0]].shape[0])  # Assuming first index are the times
+            # Verify each timestep is available on all fields
+            for c_field in var_names:
+                c_field = variables_dic[c_field]
+                assert c_field.shape[0] >= len(times)
+
+        for c_time in times:
+            title = F"Time: {c_time} {title}"
+            file_name_prefix = F"{c_time}_{file_name_prefix}"
+            c_time_vars_dic = {var_name:variables_dic[var_name][c_time,:,:,:] for var_name in var_names}
+            self.plot_3d_data_npdict(c_time_vars_dic, var_names, z_levels, title,
+                                    file_name_prefix, cmap, z_names, show_color_bar,
+                                    plot_mode, mincbar, maxcbar)
+
+
+    def plot_3d_data_npdict(self, variables_dic:list, var_names:list, z_levels= [], title='',
+                          file_name_prefix='', cmap=None, z_names = [],
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+        """
+        Plots multiple z_levels for multiple fields.
+        It assumes the dimensions on the fields are (depth, lat, lon)
+        Main plotting function. All the other functions call this one.
+        Args:
+        Returns:
         """
         create_folder(self._output_folder)
         orig_cmap = cmap
 
         # If the user do not requires any z-leve, then all are plotted
         if len(z_levels) == 0:
-            z_levels = range(np_variables[var_names[0]].shape[0])
+            z_levels = range(variables_dic[var_names[0]].shape[0])
 
         cols = np.min((self._max_imgs_per_row, len(var_names)))
         if cols == len(var_names):
@@ -365,7 +411,7 @@ class EOAImageVisualizer:
                         # If it is just one cmap, then we use it for all the fields
                         cmap = orig_cmap
 
-                im = self.plot_slice_eoa(np_variables[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
+                im = self.plot_slice_eoa(variables_dic[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
                                          mincbar=c_mincbar, maxcbar=c_maxcbar)
 
                 if self._show_var_names:
@@ -385,11 +431,11 @@ class EOAImageVisualizer:
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
         self._close_figure()
 
-    def plot_2d_data_xr(self, np_variables:list, var_names:list, title='',
+    def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',
                             file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
-        :param np_variables:
+        :param xr_ds:
         :param var_names:
         :param title:
         :param file_name_prefix:
@@ -404,7 +450,7 @@ class EOAImageVisualizer:
         '''
         npdict_3d = {}
         for i, field_name in enumerate(var_names):
-            npdict_3d[field_name] = np.expand_dims(np_variables[field_name], axis=0)
+            npdict_3d[field_name] = np.expand_dims(xr_ds[field_name], axis=0)
         self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
                         file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
                         show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)

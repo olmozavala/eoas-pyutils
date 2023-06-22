@@ -15,4 +15,5 @@ class BackgroundType(Enum):
     CARTO_DEF = 5
     BLACK = 6
     WHITE = 7
+    NONE = 8
 

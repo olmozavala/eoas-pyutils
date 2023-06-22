@@ -1,16 +1,22 @@
+import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import path
+from shapely.geometry import Polygon
 
 from viz_utils.eoa_viz import EOAImageVisualizer
 from viz_utils.constants import PlotMode, BackgroundType
-from proc_utils.comp_fields import vorticity
+from proc_utils.comp_fields import vorticity, coriolis
 from proc_utils.proj import haversineForGrid
+from proc_utils.geometries import histogram_from_locations, intersect_polygon_grid
 from proc_utils.gom import lc_from_ssh
+
 from shapely.geometry import LineString
 
-## ------------ Composite fields -----------
+## ============ Composite fields ===========
 print("Reading data...")
-input_file = "/home/olmozavala/Dropbox/TestData/netCDF/GoM/hycom_gomu_501_1993010100_t000.nc"
+input_file = "./test_data/hycom_gom.nc"
 ds = xr.open_dataset(input_file, decode_times=False)
 print(ds.info())
 # Reading specific field and layers
@@ -29,34 +35,62 @@ viz_obj.plot_3d_data_npdict({'vort':vort[0,:]}, ['vort'], [0], 'Vorticity', 'myp
 viz_obj.plot_3d_data_npdict({'mag':mag[0,:]}, ['mag'], [0], 'Magnitude', 'myplot')
 viz_obj.plot_3d_data_npdict({'vortnorm':vort_norm[0,:]}, ['vortnorm'], [0], 'Vorticity normalized', 'myplot', mincbar=[-1*cbarlim], maxcbar=[cbarlim])
 
+## ------------ Coriolis -----------
+cor_par = coriolis(lats)
+fig, ax = plt.subplots(1,1, figsize=(8,4))
+ax.plot(lats, cor_par)
+ax.set_title("Coriolis parameter")
+ax.set_xlabel("Lats")
+ax.set_ylabel("Coriolis")
+plt.show()
 
-## ------------ Cropping fields -----------
-# ds_crop = ds.sel(lat=slice(24,30), lon=slice(-84, -78))  # Cropping by value
-# ds_crop = ds_crop.isel(time=0)  # Cropping by index
-# lats = ds_crop.lat
-# lons = ds_crop.lon
-# viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
-# viz_obj.plot_3d_data_npdict(ds_crop, ['water_u'], [0], 'U', 'myplot', mincbar=[-.5], maxcbar=[.5])
+## ============ Cropping fields ===========
+ds_crop = ds.sel(lat=slice(24,30), lon=slice(-84, -78))  # Cropping by value
+ds_crop = ds_crop.isel(time=0)  # Cropping by index
+lats = ds_crop.lat
+lons = ds_crop.lon
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
+viz_obj.plot_3d_data_npdict(ds_crop, ['water_u'], [0], 'U', 'myplot', mincbar=[-.5], maxcbar=[.5])
 
-## ---------- LC from GoM SSH ------------
-file_name = "/Net/work/ozavala/GOFFISH/AVISO/1994-01.nc"
-# lc = lc_from_ssh(ds.surf_el[0,:,:], lons, lats)
-viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs",
-                             eoas_pyutils_path=".", background=BackgroundType.BLUE_MARBLE_LR)
-# viz_obj.__setattr__('additional_polygons', [LineString(lc)])
-viz_obj.plot_3d_data_npdict(ds, ['surf_el'], [0], 'SSH', 'myplot', mincbar=[-1], maxcbar=[1] )
+## ============ Raster histogram ===========
+file_name = "test_data/hycom_gom.nc"
+ds = xr.open_dataset(file_name, decode_times=False)
+lats = ds.lat.data
+lons = ds.lon.data
+viz_obj = EOAImageVisualizer(disp_images=True, output_folder='output', lats=lats, lons=lons, eoas_pyutils_path=".")  # For Python console
+viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field Example (temp)', file_name_prefix='Test', z_levels=[0])
 
-## ---------- LC from AVISO ------------
-file_name = "/Net/work/ozavala/GOFFISH/AVISO/1994-01.nc"
-ds_aviso_full = xr.open_dataset(file_name)
-ds_aviso = ds_aviso_full.sel(latitude=slice(18,32), longitude=slice(-98, -78))  # Cropping by value
-lons_aviso = ds_aviso.longitude
-lats_aviso = ds_aviso.latitude
-lc = lc_from_ssh(ds_aviso.adt[0,:,:], lons_aviso, lats_aviso)
-viz_obj = EOAImageVisualizer(lats=lats_aviso, lons=lons_aviso, disp_images=True, output_folder="outputs",
-                             eoas_pyutils_path=".", background=BackgroundType.BLUE_MARBLE_LR)
-viz_obj.__setattr__('additional_polygons', [LineString(lc)])
-viz_obj.plot_3d_data_npdict(ds_aviso, ['adt'], [0], 'SSH', 'myplot', mincbar=[-1], maxcbar=[1] )
+## ----------------- Histogram from locations
+# Make grid of size ~2 degrees
+gridres = 1
+minlat, maxlat, rangelat = (18, 32, 32-18)
+minlon, maxlon, rangelon = (-98, -76, 98-76)
+lats_coarse = np.linspace(minlat, maxlat, int(rangelat/gridres)+1)
+lons_coarse = np.linspace(minlon, maxlon, int(rangelon/gridres)+1)
+ds_coarse = ds.interp(lat=lats_coarse, lon=lons_coarse) # Interpolate original temp grid to new resolution
+grid_coarse = ds_coarse.water_temp[0, 0, :, :].data.copy() # Copy original grid
+grid_coarse[~np.isnan(grid_coarse)] = 0
+# Interpolate to new grid
+test_lon = -93.0
+test_lat = 22.0
+# We make 6 locations and increase the number at center
+# locations = zip([19, 20, 21, test_lat, test_lat, test_lat, ], [test_lon, test_lon, test_lon, -94, -95, -96])
+locations = zip([19, 20, 21], [test_lon, test_lon, test_lon])
+hist = histogram_from_locations(grid_coarse, lats_coarse, lons_coarse, locations)
+viz_obj.plot_2d_data_np(hist, ['histogram'], title=F'Histogram locations', file_name_prefix='hist')
 
+## ----------------- Intersection with geo_poly example ----------------------
+geom_poly= np.array([[-87.5, 21.15], [-84.15, 22.35], [-82.9, 22.9], [-81, 22.9], [-81, 27], [-82.5, 32.5], [-76.5, 32.5], [-76.5, 16.5], [-90, 16.5], [-87.5, 21.15]])
+polygon_shape = Polygon(geom_poly)
+
+viz_obj.__setattr__('additional_polygons',[polygon_shape])
+viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field with geo_poly', file_name_prefix='Test', z_levels=[0])
+
+##
+print("Making the intersection...")
+grid_bin = intersect_polygon_grid(ds.water_temp[0,0,:,:], lats, lons, geom_poly)
+print("Done!")
+viz_obj.plot_2d_data_np(grid_bin, ['binary_grid'], flip_data=False, rot_90=False, title=F'Intersection Example', file_name_prefix='Test')
+print("Done")
 ##
 
