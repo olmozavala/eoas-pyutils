@@ -62,6 +62,7 @@ class EOAImageVisualizer:
     _show_var_names = False  # Includes the name of the field name in the titles
     _contourf = False  # When plotting non-regular grids and need precision
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
+    _coastline = False # If we want to display the coastline
     # ------ 'Local' attributes defined at each plot function
     _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
     _maxcbar  = np.nan
@@ -125,6 +126,10 @@ class EOAImageVisualizer:
 
         if self._background == BackgroundType.CARTO_DEF:
             c_ax.stock_img()
+        elif self._background == BackgroundType.WHITE:
+            ax.set_facecolor("white")
+        elif self._background == BackgroundType.BLACK:
+            ax.set_facecolor("black")
         else:
             if self._background == BackgroundType.BLUE_MARBLE_LR:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bluemarble.png'))
@@ -138,7 +143,7 @@ class EOAImageVisualizer:
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
-                im = c_ax.contourf(self._lons, self._lats, c_img, num_colors=255, cmap=cmap, extent=self._extent)
+                im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
             else:
                 if np.isnan(mincbar):
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=self._norm)
@@ -172,6 +177,9 @@ class EOAImageVisualizer:
 
             #  Adds a threshold to the plot to see the polygons
             c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
+
+        if self._coastline:
+            c_ax.coastlines()
 
         if self._vector_field != None:
             try:
@@ -241,10 +249,10 @@ class EOAImageVisualizer:
         Returns:
 
         '''
-        minLat = np.amin(lats) - expand_ext
-        maxLat = np.amax(lats) + expand_ext
-        minLon = np.amin(lons) - expand_ext
-        maxLon = np.amax(lons) + expand_ext
+        minLat = np.amin(lats).item() - expand_ext
+        maxLat = np.amax(lats).item() + expand_ext
+        minLon = np.amin(lons).item() - expand_ext
+        maxLon = np.amax(lons).item() + expand_ext
         bbox = (minLon, maxLon, minLat, maxLat)
         return bbox
 
