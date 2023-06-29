@@ -2,6 +2,8 @@ from scipy.interpolate import interp1d
 from skimage import measure
 from matplotlib import path
 import numpy as np
+import pickle
+from os.path import join
 
 gom_bnd = np.array([[-87.5, 21.15], [-84.15, 22.35], [-82.9, 22.9], [-81, 22.9], [-81, 27], [-82.5, 32.5], [-76.5, 32.5], [-76.5, 16.5], [-90, 16.5], [-87.5, 21.15]])
 gom_path = path.Path(gom_bnd)
@@ -69,3 +71,14 @@ def lc_from_ssh(ssh, lon, lat, mean_adt=0.35869857):
     pos = zip(lc_lons, lc_lats)
     return pos
 
+
+def lc_from_date(c_date, folder = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/LC"):
+    """
+    Obtains the Loop Current contour from a date
+    Args:
+    """
+    fname = join(folder, str(c_date.year), F"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.pkl")
+    with open(fname, 'rb') as f:
+        data = pickle.load(f)
+
+    return data

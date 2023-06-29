@@ -178,7 +178,7 @@ class EOAImageVisualizer:
                 if isinstance(c_polygon, shapely.geometry.linestring.Point):
                     c_ax.scatter(x, y, transform=self._projection, c='r')
                 else:
-                    c_ax.plot(x,y, transform=self._projection, c='y')
+                    c_ax.plot(x,y, transform=self._projection, c='b', linewidth=3, linestyle='--')
 
             #  Adds a threshold to the plot to see the polygons
             c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
