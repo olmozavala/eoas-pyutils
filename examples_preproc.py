@@ -14,7 +14,7 @@ from proc_utils.gom import lc_from_ssh
 
 from shapely.geometry import LineString
 
-## ============ Composite fields ===========
+# %% ============ Composite fields ===========
 print("Reading data...")
 input_file = "./test_data/hycom_gom.nc"
 ds = xr.open_dataset(input_file, decode_times=False)
@@ -23,7 +23,7 @@ print(ds.info())
 lons = ds.lon
 lats = ds.lat
 
-## ------------ Vorticity -----------
+# %% ------------ Vorticity -----------
 vort = vorticity(ds.water_u, ds.water_v)
 grid = np.meshgrid(lons, lats)
 grid_dist = haversineForGrid(grid) / 1000
@@ -35,7 +35,7 @@ viz_obj.plot_3d_data_npdict({'vort':vort[0,:]}, ['vort'], [0], 'Vorticity', 'myp
 viz_obj.plot_3d_data_npdict({'mag':mag[0,:]}, ['mag'], [0], 'Magnitude', 'myplot')
 viz_obj.plot_3d_data_npdict({'vortnorm':vort_norm[0,:]}, ['vortnorm'], [0], 'Vorticity normalized', 'myplot', mincbar=[-1*cbarlim], maxcbar=[cbarlim])
 
-## ------------ Coriolis -----------
+# %% ------------ Coriolis -----------
 cor_par = coriolis(lats)
 fig, ax = plt.subplots(1,1, figsize=(8,4))
 ax.plot(lats, cor_par)
@@ -44,7 +44,7 @@ ax.set_xlabel("Lats")
 ax.set_ylabel("Coriolis")
 plt.show()
 
-## ============ Cropping fields ===========
+# %% ============ Cropping fields ===========
 ds_crop = ds.sel(lat=slice(24,30), lon=slice(-84, -78))  # Cropping by value
 ds_crop = ds_crop.isel(time=0)  # Cropping by index
 lats = ds_crop.lat
@@ -52,7 +52,7 @@ lons = ds_crop.lon
 viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs", eoas_pyutils_path=".")
 viz_obj.plot_3d_data_npdict(ds_crop, ['water_u'], [0], 'U', 'myplot', mincbar=[-.5], maxcbar=[.5])
 
-## ============ Raster histogram ===========
+# %% ============ Raster histogram ===========
 file_name = "test_data/hycom_gom.nc"
 ds = xr.open_dataset(file_name, decode_times=False)
 lats = ds.lat.data
@@ -60,7 +60,7 @@ lons = ds.lon.data
 viz_obj = EOAImageVisualizer(disp_images=True, output_folder='output', lats=lats, lons=lons, eoas_pyutils_path=".")  # For Python console
 viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field Example (temp)', file_name_prefix='Test', z_levels=[0])
 
-## ----------------- Histogram from locations
+# %% ----------------- Histogram from locations
 # Make grid of size ~2 degrees
 gridres = 1
 minlat, maxlat, rangelat = (18, 32, 32-18)
@@ -79,18 +79,19 @@ locations = zip([19, 20, 21], [test_lon, test_lon, test_lon])
 hist = histogram_from_locations(grid_coarse, lats_coarse, lons_coarse, locations)
 viz_obj.plot_2d_data_np(hist, ['histogram'], title=F'Histogram locations', file_name_prefix='hist')
 
-## ----------------- Intersection with geo_poly example ----------------------
+
+# %% ----------------- Intersection with geo_poly example ----------------------
 geom_poly= np.array([[-87.5, 21.15], [-84.15, 22.35], [-82.9, 22.9], [-81, 22.9], [-81, 27], [-82.5, 32.5], [-76.5, 32.5], [-76.5, 16.5], [-90, 16.5], [-87.5, 21.15]])
 polygon_shape = Polygon(geom_poly)
 
 viz_obj.__setattr__('additional_polygons',[polygon_shape])
 viz_obj.plot_3d_data_npdict({'water_temp':ds.water_temp[0,:,:,:]}, ['water_temp'], title=F'Field with geo_poly', file_name_prefix='Test', z_levels=[0])
 
-##
+# %%
 print("Making the intersection...")
 grid_bin = intersect_polygon_grid(ds.water_temp[0,0,:,:], lats, lons, geom_poly)
 print("Done!")
 viz_obj.plot_2d_data_np(grid_bin, ['binary_grid'], flip_data=False, rot_90=False, title=F'Intersection Example', file_name_prefix='Test')
 print("Done")
-##
+# %%
 

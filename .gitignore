@@ -1,5 +1,7 @@
 # OZ
 .idea
+.DS_Store
+.vscode
 *.swp
 output
 outputs

@@ -68,3 +68,4 @@ def lc_from_ssh(ssh, lon, lat, mean_adt=0.35869857):
     lc_lons = np.concatenate([np.flip(cc[i][:,1]) for i in indexes])
     pos = zip(lc_lons, lc_lats)
     return pos
+
