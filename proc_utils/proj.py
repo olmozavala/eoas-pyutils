@@ -45,6 +45,14 @@ def haversineForGrid(grid):
     dist = (6371000 * c)  # [m]
     return dist
 
+def get_ccrs_bbox(lats, lons):
+    """
+    :param lats:
+    :param lons:
+    :return:  (minlon, maxlon, minlat, maxlat)
+    """
+    return (np.amin(lons), np.amax(lons), np.amin(lats), np.amax(lats))
+
 if __name__ == "__main__":
 
     # ------ For two points
