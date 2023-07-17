@@ -3,7 +3,9 @@
 from os.path import join
 import numpy as np
 import xarray as xr
-from datetime import datetime, date, timedelta
+from datetime import datetime
+
+from io_utils.dates_utils import get_day_of_year_from_month_and_day
 
 
 def get_aviso_by_month(aviso_folder, c_date, bbox=None):
@@ -68,44 +70,13 @@ def get_sss_by_date(sss_folder, c_date, bbox=None):
 
     day_of_year = get_day_of_year_from_month_and_day(c_date.month, c_date.day, year=datetime.now().year)
 
-    sss_file_name = join(sss_folder, str(c_date.year), f"RSS_smap_SSS_L3_8day_running_{c_date.year}_{day_of_year}_FNL_v05.0.nc")
+    sss_file_name = join(sss_folder, str(c_date.year), f"RSS_smap_SSS_L3_8day_running_{c_date.year}_{day_of_year:03d}_FNL_v05.0.nc")
     sss_data = xr.load_dataset(sss_file_name)
     if bbox is not None:
         sss_data = sss_data.sel( lat=slice(bbox[0],bbox[1]),
-                                lon=slice(bbox[2],bbox[3]))
+                                lon=slice((bbox[2] + 360)%360,(bbox[3] + 360)%360))
 
     lats = sss_data.lat
     lons = sss_data.lon
 
     return sss_data, lats, lons
-
-
-# %%
-# Testing the provided functions
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    from io_utils.dates_utils import get_day_of_year_from_month_and_day
-
-    aviso_folder = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/GoM/"
-    sst_folder = "/unity/f1/ozavala/DATA/GOFFISH/SST/OISST"
-    c_date = datetime(2012, 1, 10)
-    c_date_str = c_date.strftime("%Y-%m-%d")
-
-    # Print 
-    # aviso_data, lats, lons = get_aviso_by_month(aviso_folder, c_date, bbox=[17.5, 32.5, -98, -76])
-    # print(f"Reading monthly aviso data... the number of times available are: {aviso_data.time.size} for date {c_date_str}")
-
-    # aviso_data, lats, lons = get_aviso_by_date(aviso_folder, c_date, bbox=[17.5, 32.5, -98, -76])
-    # print(f"Reading monthly aviso data... the number of times available are: {aviso_data.time.size} requested {c_date_str} available {aviso_data.time.values}")
-    # plt.imshow(aviso_data.adt[:,:], origin="lower")
-    # plt.show()
-
-    # sst_data, lats, lons = get_sst_by_date(sst_folder, c_date, bbox=[17.5, 32.5, -98, -76])
-    # print(f"Reading monthly aviso data... for date {c_date_str}")
-    # plt.imshow(sst_data.analysed_sst[0,:,:], origin="lower")
-    # plt.show()
-
-    sss_data, lats, lons = get_sss_by_date(sst_folder, c_date, bbox=[17.5, 32.5, -98, -76])
-    print(f"Reading monthly aviso data... for date {c_date_str}")
-    plt.imshow(sss_data.analysed_sst[:,:], origin="lower")
-    plt.show()
