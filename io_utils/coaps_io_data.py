@@ -1,4 +1,4 @@
-# %%
+# %% Imports
 # Purpose: Functions for reading and writing COAPS data
 from os.path import join
 import numpy as np
@@ -7,7 +7,7 @@ from datetime import datetime
 
 from io_utils.dates_utils import get_day_of_year_from_month_and_day
 
-
+# %% AVISO by month
 def get_aviso_by_month(aviso_folder, c_date, bbox=None):
     '''
     Reads AVISO monthly data for a given date. You can also specify a bounding box and the data will be cropped to that region.
@@ -23,6 +23,7 @@ def get_aviso_by_month(aviso_folder, c_date, bbox=None):
 
     return aviso_data, lats, lons
 
+# %% AVISO by date
 def get_aviso_by_date(aviso_folder, c_date, bbox=None):
     '''
     Reads AVISO single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
@@ -46,6 +47,7 @@ def get_aviso_by_date(aviso_folder, c_date, bbox=None):
 
     return aviso_data, lats, lons
 
+# %% SST by date
 def get_sst_by_date(sst_folder, c_date, bbox=None):
     '''
     Reads SST single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
@@ -62,6 +64,7 @@ def get_sst_by_date(sst_folder, c_date, bbox=None):
 
     return sst_data, lats, lons
 
+# %% SSS by date
 def get_sss_by_date(sss_folder, c_date, bbox=None):
     '''
     Reads salinity single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
@@ -80,3 +83,22 @@ def get_sss_by_date(sss_folder, c_date, bbox=None):
     lons = sss_data.lon
 
     return sss_data, lats, lons
+
+
+# %% Chlora NOAA by date
+def get_chlora_noaa_by_date(chlora_folder, c_date, bbox=None):
+    '''
+    Reads salinity single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
+    '''
+    chlora_file_name = join(chlora_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
+    chlora_data = xr.load_dataset(chlora_file_name)
+    if bbox is not None:
+        # TODO for some reason the latitude field is flipped
+        chlora_data = chlora_data.sel( latitude=slice(bbox[1],bbox[0]),
+                                       longitude=slice(bbox[2], bbox[3])) 
+
+
+    lats = chlora_data.latitude
+    lons = chlora_data.longitude
+
+    return chlora_data, lats, lons
