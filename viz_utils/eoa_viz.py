@@ -72,7 +72,6 @@ class EOAImageVisualizer:
     # If you want to add a streamplot of a vector field. It must be a dictionary with keys x,y,u,v
     # and optional density, color, cmap, arrowsize, arrowstyle, minlength
     _vector_field = None
-    _norm = None  # Use to normalize the colormap. For example with LogNorm
 
     # vizobj = EOAImageVisualizer(disp_images=True, output_folder='output',
     #                                 lats=[lats],lons=[lons])
@@ -115,7 +114,7 @@ class EOAImageVisualizer:
             else:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
 
-    def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan) -> None:
+    def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=None) -> None:
         """
         Plots a 2D img for EOA data.
         :param c_img: 2D array
@@ -152,9 +151,14 @@ class EOAImageVisualizer:
                 im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
             else:
                 if np.isnan(mincbar):
-                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=self._norm)
+                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                 else:
-                    im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection, norm=self._norm)
+                    if norm is not None:
+                        print(f"Warning, using norm and mincbar at the same time")
+                        im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
+                    else:
+                        im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection, norm=norm)
+
 
         if mode == PlotMode.CONTOUR or mode == PlotMode.MERGED:
             c_ax.set_extent(self.getExtent(list(self._lats), list(self._lons)))
@@ -311,7 +315,7 @@ class EOAImageVisualizer:
 
     def plot_4d_data_npdict(self, variables_dic:list, var_names:list, times=[], z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
-                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
         """
         Plots multiple z_levels for multiple fields.
         It assumes the dimensions on the fields are (time, depth, lat, lon)
@@ -344,12 +348,12 @@ class EOAImageVisualizer:
             c_time_vars_dic = {var_name:variables_dic[var_name][c_time,:,:,:] for var_name in var_names}
             self.plot_3d_data_npdict(c_time_vars_dic, var_names, z_levels, title,
                                     file_name_prefix, cmap, z_names, show_color_bar,
-                                    plot_mode, mincbar, maxcbar)
+                                    plot_mode, mincbar, maxcbar, norm=norm)
 
 
     def plot_3d_data_npdict(self, variables_dic:list, var_names:list, z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
-                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
         """
         Plots multiple z_levels for multiple fields.
         It assumes the dimensions on the fields are (depth, lat, lon)
@@ -383,6 +387,7 @@ class EOAImageVisualizer:
 
             c_mincbar = np.nan
             c_maxcbar = np.nan
+            c_norm = None
             for idx_var, c_var in enumerate(var_names): # Iterate over the fields
                 if rows*cols == 1:  # Single figure
                     ax = _axs
@@ -391,15 +396,21 @@ class EOAImageVisualizer:
 
                 # Here we chose the min and max colorbars for each field
                 if not(np.all(np.isnan(mincbar))):
-                    if type(mincbar) is list:
+                    if type(mincbar) is list or type(mincbar) is np.ndarray:
                         c_mincbar = mincbar[idx_var]
                     else:
                         c_mincbar = mincbar
                 if not(np.all(np.isnan(maxcbar))):
-                    if type(mincbar) is list:
-                        c_maxcbar = maxcbar[idx_var]
+                    if type(maxcbar) is list or type(maxcbar) is np.ndarray:
+                        if maxcbar[idx_var] != None:
+                            c_maxcbar = maxcbar[idx_var]
                     else:
                         c_maxcbar = maxcbar
+
+                if type(norm) is list or type(norm) is np.ndarray:
+                    c_norm = norm[idx_var]
+                else:
+                    c_norm = norm
 
                 # By default we select the colorbar from the name of the variable
                 if self._auto_colormap and orig_cmap is None:
@@ -413,7 +424,7 @@ class EOAImageVisualizer:
                         cmap = orig_cmap
 
                 im = self.plot_slice_eoa(variables_dic[c_var][c_slice,:,:], ax, cmap=cmap, mode=plot_mode,
-                                         mincbar=c_mincbar, maxcbar=c_maxcbar)
+                                         mincbar=c_mincbar, maxcbar=c_maxcbar, norm=c_norm)
 
                 if self._show_var_names:
                     c_title = F'{var_names[idx_var]} {title}'
@@ -433,7 +444,8 @@ class EOAImageVisualizer:
         self._close_figure()
 
     def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',
-                            file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+                            file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, 
+                            mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param xr_ds:
@@ -454,11 +466,11 @@ class EOAImageVisualizer:
             npdict_3d[field_name] = np.expand_dims(xr_ds[field_name], axis=0)
         self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
                         file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
-                        show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
+                        show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar, norm=norm)
 
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
                             file_name_prefix='', cmap=None,  flip_data=False,
-                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan):
+                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]
@@ -489,7 +501,7 @@ class EOAImageVisualizer:
 
         self.plot_3d_data_npdict(npdict_3d, var_names, z_levels=[0], title=title,
                         file_name_prefix=file_name_prefix, cmap=cmap, z_names = [],
-                        show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar)
+                        show_color_bar=show_color_bar, plot_mode=plot_mode, mincbar=mincbar, maxcbar=maxcbar, norm=norm)
 
     def make_video_from_images(self, input_folder, output_file, fps=24):
         files = listdir(input_folder)

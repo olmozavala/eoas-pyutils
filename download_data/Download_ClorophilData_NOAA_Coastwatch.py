@@ -18,7 +18,7 @@ if not os.path.exists(output_folder):
 lon = [262, 305]  # [-98, -60]
 lat = [7.5, 50]
 
-start_date = datetime.date(2018,2,10)
+start_date = datetime.date(2010,2,10)
 # final_end_date = datetime.date(2022,10,7)
 final_end_date = datetime.date.today()
 c_date = start_date
