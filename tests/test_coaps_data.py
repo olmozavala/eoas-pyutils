@@ -9,7 +9,6 @@ c_date = datetime(2016, 1, 10)
 c_date_str = c_date.strftime("%Y-%m-%d")
 bbox = [17.5, 32.5, -98, -76]
 
-
 def test_aviso():
     aviso_folder = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/GoM/"
     # Print 

@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 from os import walk, listdir
 from os.path import join
@@ -89,3 +90,15 @@ def read_multiple_netcdf_xarr(file_names:str, fields: list):
     for c_file in file_names:
         ds = xr.load_dataset(c_file)
 
+
+# This is an enum class that provides the standar names used for differnet variables
+class CF_StandardNames(Enum):
+    # Standard names for the variables
+    # http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
+    TEMP = "sea_water_temperature"
+    SALINITY = "sea_water_salinity"
+    SSH = "sea_surface_height"
+    U = "eastward_sea_water_velocity"
+    V = "northward_sea_water_velocity"
+    MLD = "sea_water_mixed_layer_thickness"
+    CHLORA = "chlorophyll_concentration_in_sea_water"
