@@ -39,7 +39,6 @@ def lc_from_ssh(ssh, lon, lat, mean_adt=0.35869857):
     Args:
         ssh:
         mean_adt:
-
     Returns:
 
     """

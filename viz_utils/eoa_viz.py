@@ -38,6 +38,8 @@ def select_colormap(field_name):
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
+    elif np.any([field_name.find(x) != -1 for x in ('chlor-a', 'chlora', 'dchl', 'nchl')]):
+        return cmocean.cm.algae
     elif field_name.find('error') != -1:
         return cmocean.cm.diff
     elif field_name.find('binary') != -1:

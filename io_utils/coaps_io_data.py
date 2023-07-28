@@ -1,8 +1,11 @@
 # %% Imports
 # Purpose: Functions for reading and writing COAPS data
+import os
 from os.path import join
+import pandas as pd
 import xarray as xr
-from datetime import datetime
+import numpy as np
+from datetime import date, datetime
 
 # Only if debugging 
 import sys
@@ -199,20 +202,75 @@ def get_hycom_gom_raw_by_date(c_date, bbox=None):
 
     return hycom_data, lats, lons
 
+# %% Get CICESE BioRun data by date
+def get_biorun_cicese_nemo_by_date(c_date, bbox=None):
+    input_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/CICESE_NEMO_GOM_RAW"
+
+    c_year = c_date.year
+
+    # Getting the dimensions of the dataset from random file
+    ds = xr.open_dataset(join(input_folder, "GOM36-ERA5_0_1d_20170327_20170724_ptrc_T.nc"))
+    lats = ds.nav_lat[:,0]
+    lons = ds.nav_lon[0,:]
+
+    # Read all the files that contain "ptrc_T" in the name
+    ptr_files = [x for x in os.listdir(input_folder) if x.find("ptrc_T") != -1 and x.find(str(c_year)) != -1]
+    # print(ptr_files)
+    for c_ptr_file in ptr_files:
+        # Create a date for the start date of the file. It is the 4th element of the file name and the format is YYYYMMDD
+        c_start_date = date(int(c_ptr_file.split("_")[3][0:4]), int(c_ptr_file.split("_")[3][4:6]), int(c_ptr_file.split("_")[3][6:8]))
+        c_end_date = date(int(c_ptr_file.split("_")[4][0:4]), int(c_ptr_file.split("_")[4][4:6]), int(c_ptr_file.split("_")[4][6:8]))
+        # Verify the desired date is withing the range of dates
+        if c_date >= c_start_date and c_date <= c_end_date:
+            print(f"{c_ptr_file}  - Current date: {c_date} - {c_start_date}, {c_end_date}")
+            c_sal_temp_file = c_ptr_file.replace("ptrc_T", "grid_T_SAL_TEMP")
+            c_mld_ssh_file = c_ptr_file.replace("ptrc_T", "grid_T_MLD_SSH")
+            # PTR file -> DCHL, NCHL
+            # T_SAL_TEMP -> vosaline, votemper
+            # MLD_SSH -> mld001, sossheig
+            ds_ptr = xr.open_dataset(join(input_folder, c_ptr_file))
+            ds_sal_temp = xr.open_dataset(join(input_folder, c_sal_temp_file))
+            ds_mld_ssh = xr.open_dataset(join(input_folder, c_mld_ssh_file))
+
+            times = pd.date_range(start=c_start_date, end=c_end_date, freq="1D")
+            c_time_idx = np.argmax(times > np.datetime64(c_date))
+            ds = xr.Dataset( {
+                "temperature"    : (("time", "latitude", "longitude"), ds_sal_temp.votemper[c_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "salinity"       : (("time", "latitude", "longitude"), ds_sal_temp.vosaline[c_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "nchl"           : (("time", "latitude", "longitude"), ds_ptr.NCHL[c_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "dchl"           : (("time", "latitude", "longitude"), ds_ptr.DCHL[c_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "mld"            : (("time", "latitude", "longitude"), ds_mld_ssh.mld001[c_time_idx,:,:].data[np.newaxis,:,:]),
+                "ssh"            : (("time", "latitude", "longitude"), ds_mld_ssh.sossheig[c_time_idx,:,:].data[np.newaxis,:,:]),
+                # "latitude"       : (("lat"), lats.data),
+                # "longitude"      : (("lon"), lons.data),
+            },
+            {"time": [times[c_time_idx]], "latitude": lats.data, "longitude": lons.data})
+
+            ds.attrs = ds_ptr.attrs
+
+            if bbox is not None:
+                ds = ds.sel(latitude=slice(bbox[0],bbox[1]),
+                                            longitude=slice(bbox[2], bbox[3])) 
+            return ds, lats, lons
+
 
 # %% Main just for testing
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from matplotlib.colors import LogNorm
-    import numpy as np
-    c_date = datetime(2019, 1, 10)
+
+    c_date = date(2019, 1, 10)
     c_date_str = c_date.strftime("%Y-%m-%d")
     bbox = [17.5, 32.5, -98, -76]
 
+    # %% Access CICESE NEMO Run 
+    biorun, lats, lons = get_biorun_cicese_nemo_by_date(c_date, bbox)
+
+    # %% TODO move this to a test file
     hycom_data, lats, lons = get_hycom_gom_raw_by_date(c_date, bbox)
 
     # Make a grid 2x2 with the plots of surf_el, water_temp, salinity and velocity
-    fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+    fig, axs = plt.subplots(4, 2, figsize=(10, 10))
     # Superior title the date as a string
     fig.suptitle(c_date_str)
     # Plot surf_el
@@ -227,7 +285,21 @@ if __name__ == "__main__":
     # Plot velocity
     axs[1, 1].imshow(np.sqrt(hycom_data.u[0,0,:,:]**2 + hycom_data.v[0,0,:,:]**2), origin="lower")
     axs[1, 1].set_title("Velocity")
+    # Plot cicese temperature
+    axs[2, 0].imshow(biorun.temperature[0,:,:], origin="lower")
+    axs[2, 0].set_title("CICESE Temperature")
+    # Plot cicese salinity
+    axs[2, 1].imshow(biorun.salinity[0,:,:], origin="lower")
+    axs[2, 1].set_title("CICESE Salinity")
+    # Plot cicese ssh
+    axs[3, 0].imshow(biorun.ssh[0,:,:], origin="lower")
+    axs[3, 0].set_title("CICESE SSH")
+    # Plot cicese nchl
+    axs[3, 1].imshow(biorun.nchl[0,:,:], origin="lower")
+    axs[3, 1].set_title("CICESE NCHL")
+
     plt.show()
     print("Done testing!")
+
 
 # %%
