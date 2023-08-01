@@ -129,6 +129,9 @@ class EOAImageVisualizer:
         else:
             origin = 'upper'
 
+        if np.isnan(norm):
+            norm = None
+
         if self._background == BackgroundType.CARTO_DEF:
             c_ax.stock_img()
         elif self._background == BackgroundType.WHITE:
@@ -180,9 +183,13 @@ class EOAImageVisualizer:
                     x, y = c_polygon.xy
                 elif isinstance(c_polygon, shapely.geometry.polygon.Polygon):
                     x, y = c_polygon.exterior.xy
+                elif isinstance(c_polygon, shapely.geometry.multipoint.MultiPoint):
+                    # TODO how to get these values more efficiently (and in one line)
+                    x = [p.x for p in c_polygon.geoms]
+                    y = [p.y for p in c_polygon.geoms]
                 pol_lats += y
                 pol_lons += x
-                if isinstance(c_polygon, shapely.geometry.linestring.Point):
+                if isinstance(c_polygon, shapely.geometry.linestring.Point) or isinstance(c_polygon, shapely.geometry.multipoint.MultiPoint):
                     c_ax.scatter(x, y, transform=self._projection, c='r')
                 else:
                     c_ax.plot(x,y, transform=self._projection, c='b', linewidth=3, linestyle='--')

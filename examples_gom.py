@@ -42,3 +42,13 @@ viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_fold
 mylinestring = LineString(list(lc))
 viz_obj.__setattr__('additional_polygons', [mylinestring])
 viz_obj.plot_2d_data_np(adt_slice, ['adt'], 'LC', 'filepref', plot_mode=PlotMode.RASTER)
+
+import datetime
+start_date = datetime.datetime(2001, 3, 1)
+
+lc = lc_from_date(start_date)
+
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs",  show_var_names=True, eoas_pyutils_path=".")
+mylinestring = LineString(list(lc))
+viz_obj.__setattr__('additional_polygons', [mylinestring])
+viz_obj.plot_2d_data_np(adt_slice, ['adt'], 'LC', 'filepref', plot_mode=PlotMode.RASTER)

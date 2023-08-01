@@ -8,7 +8,7 @@ import xarray as xr
 import numpy as np
 from viz_utils.eoa_viz import EOAImageVisualizer
 from viz_utils.constants import PlotMode, BackgroundType
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, Polygon, MultiPoint, Point
 import cmocean.cm as ccm
 
 #%% ==================== 3D =========================================
@@ -92,6 +92,15 @@ viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'With external linestring', 'filepre
 mypolygon= Polygon(((-110,10),(-110,20),(-100,20),(-100,10),(-110,10)))
 viz_obj.__setattr__('additional_polygons', [mypolygon])
 viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'With external polygon', 'filepref', plot_mode=PlotMode.CONTOUR)
+#%% --- Points
+mypoint = Point(-110,10)
+viz_obj.__setattr__('additional_polygons', [mypoint])
+viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'With external polygon', 'filepref', plot_mode=PlotMode.CONTOUR)
+#%% --- Multipoints
+mymultipoint = MultiPoint(((-110,10),(-110,20),(-100,20),(-100,10),(-110,10)))
+viz_obj.__setattr__('additional_polygons', [mymultipoint])
+viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'With external polygon', 'filepref', plot_mode=PlotMode.CONTOUR)
+
 
 #%% ======== Stream plots ===========
 x, y = np.meshgrid(lons, lats)
