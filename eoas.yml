@@ -1,0 +1,34 @@
+name: eoas
+channels:
+    - conda-forge
+    - nodefaults
+    - anaconda
+dependencies:
+    - python=*.*
+    - pandas=*.*
+    - numpy=*.*
+    - matplotlib=*.*
+    - netcdf4=*.*
+    - cartopy=*.*
+    - xarray=*.*
+    - psycopg2=*.*
+    - dash=*.*
+    - geopandas=*.*
+    - colorcet=*.*
+    - datashader=*.*
+    - pyamg=*.*
+    - seaborn=*.*
+    - gdal=*.*
+    - descartes=*.*
+    - cmocean=*.*
+    - jupyterlab=*.*
+    - holoviews=*.*
+    - geoviews=*.*
+    - geojson=*.*
+    - motuclient=*.*
+    - scikit-learn=*.*
+    - opencv=*.*
+    - scikit-image=*.*
+    - pytest=*.*
+    - ipykernel=*.*
+    - ipywidgets=*.*

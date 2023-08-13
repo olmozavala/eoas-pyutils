@@ -1,6 +1,16 @@
 # eoas-pyutils
 A set of utilities for EOAS including IO, Visualization, Preprocessing, Metrics, etc. 
 
+# Install
+If you need to install the dependencies you can use the provided `eoas.yml` file. 
+
+To create a new environment with the proper dependencies you can do:
+```
+   conda env create -f eoas.yml
+   conda activate eoas
+```
+
+
 # Usage
 
 The idea of this repo is to use it as a submodule. 
