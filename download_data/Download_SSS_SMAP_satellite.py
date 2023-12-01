@@ -6,7 +6,7 @@ from io_utils.io_common import create_folder
 
 ## This program dowloads SSS data. TODO the data is not cropped
 
-def parallel_sss_download(output_folder, years, proc_id=1, TOT_PROC=1):
+def parallel_sss_download(output_folder, years, proc_id=0, TOT_PROC=1):
     for c_year in years:
         c_output_folder = join(output_folder,str(c_year))
         create_folder(c_output_folder)
@@ -16,11 +16,11 @@ def parallel_sss_download(output_folder, years, proc_id=1, TOT_PROC=1):
                 file_name = F"RSS_smap_SSS_L3_8day_running_{c_year}_{c_day:03d}_FNL_v05.0.nc"
                 URL = F"https://data.remss.com/smap/SSS/V05.0/FINAL/L3/8day_running/{c_year}/{file_name}"
                 try:
+                    output_file = join(c_output_folder, file_name)
                     # ------ One option is to delete previous one
                     # if os.path.exists(output_file):
                     #     os.remove(output_file)
                     # ------- Another option is to download only if it doesn't exist
-                    output_file = join(c_output_folder, file_name)
                     if os.path.exists(output_file):
                         continue
                     print(F"Downloading file for day {c_year}-{c_day:03d}: {URL}")
