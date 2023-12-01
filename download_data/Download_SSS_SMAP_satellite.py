@@ -1,17 +1,12 @@
+# %%
 import requests
 import os
 from os.path import join
-from multiprocessing import Pool
 from io_utils.io_common import create_folder
 
 ## This program dowloads SSS data. TODO the data is not cropped
 
-# output_folder = "/Net/work/ozavala/GOFFISH/SSS/SMAP_Global"
-output_folder = "../Data/AVISO/SSS/SMAP_Global"
-years = range(2021,2023)
-TOT_PROC = 10
-
-def myfunc(proc_id):
+def parallel_sss_download(output_folder, years, proc_id=1, TOT_PROC=1):
     for c_year in years:
         c_output_folder = join(output_folder,str(c_year))
         create_folder(c_output_folder)
@@ -37,7 +32,6 @@ def myfunc(proc_id):
 
     print("Done!")
 
-## Paralell (must be ex without console)
-p = Pool(TOT_PROC)
-p.map(myfunc, range(TOT_PROC))
 
+
+# %%
