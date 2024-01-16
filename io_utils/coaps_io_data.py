@@ -88,7 +88,7 @@ def get_sss_by_date(sss_folder, c_date, bbox=None):
                                 lon=slice((bbox[2] + 360)%360,(bbox[3] + 360)%360))
 
     lats = sss_data.lat
-    lons = sss_data.lon
+    lons = np.where(sss_data.lon > 180, sss_data.lon - 360, sss_data.lon)
 
     return sss_data, lats, lons
 
