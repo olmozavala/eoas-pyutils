@@ -1,6 +1,7 @@
 import os
 from os import walk, listdir
 from os.path import join
+
 def create_folder(output_folder):
     """
     It creates a folder only if it doesn't exist
@@ -27,7 +28,6 @@ def all_files_in_folder(input_folder, file_ext=None):
 
     return file_names, paths
 
-
 def str2bool(cstr: str) -> bool:
     """
     It compares a string with anything like true, and it returns True or False
@@ -38,6 +38,17 @@ def str2bool(cstr: str) -> bool:
         Boolean value of the string
     """
     return cstr in ['True', 'true', 't', True]
+
+def tuple_to_string(tup: tuple) -> str:
+    """
+    Converts a tuple to a string
+    Args:
+        tup:
+
+    Returns:
+        A string with the tuple values
+    """
+    return ','.join(str(x) for x in tup)
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""

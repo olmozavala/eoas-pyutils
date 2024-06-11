@@ -29,7 +29,7 @@ def select_colormap(field_name):
 
     '''
     field_name = field_name.lower()
-    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el')]):
+    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el','sla')]):
         # cmaps_fields.append(cmocean.cm.deep_r)
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
@@ -44,7 +44,7 @@ def select_colormap(field_name):
         return cmocean.cm.diff
     elif field_name.find('binary') != -1:
         return cmocean.cm.oxy
-    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity')]):
+    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity','ugos','vgos')]):
         return cmocean.cm.speed
 
 
@@ -66,7 +66,9 @@ class EOAImageVisualizer:
     _show_var_names = False  # Includes the name of the field name in the titles
     _contourf = False  # When plotting non-regular grids and need precision
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
-    _coastline = False # If we want to display the coastline
+    _coastline = True # If we want to display the coastline
+    _land = False # If we want to display the land
+    _ocean = False # If we want to display the ocean
     # ------ 'Local' attributes defined at each plot function
     _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
     _maxcbar  = np.nan
@@ -138,6 +140,8 @@ class EOAImageVisualizer:
             ax.set_facecolor("white")
         elif self._background == BackgroundType.BLACK:
             ax.set_facecolor("black")
+        elif self._background == BackgroundType.GREY:
+            ax.set_facecolor("grey")
         elif self._background == BackgroundType.NONE:
             print("No background")
         else:
@@ -199,6 +203,12 @@ class EOAImageVisualizer:
 
         if self._coastline:
             c_ax.coastlines()
+
+        if self._land:
+            c_ax.add_feature(cartopy.feature.LAND, edgecolor='black')
+            
+        if self._ocean:
+            c_ax.add_feature(cartopy.feature.OCEAN, edgecolor='black')
 
         if self._vector_field != None:
             try:
@@ -275,7 +285,6 @@ class EOAImageVisualizer:
         bbox = (minLon, maxLon, minLat, maxLat)
         return bbox
 
-
     def add_roads(self, ax):
         # Names come from: https://www.naturalearthdata.com/features/
         # -- Add states
@@ -318,7 +327,7 @@ class EOAImageVisualizer:
         ax.gridlines()
         im = ax.scatter(lons, lats, s=s, c=c, cmap=cmap)
         fig.colorbar(im, ax=ax, shrink=0.7)
-        ax.coastlines()
+        ax.coastlines(resolution='10m')
         plt.title(title)
         plt.show()
 
@@ -358,7 +367,6 @@ class EOAImageVisualizer:
             self.plot_3d_data_npdict(c_time_vars_dic, var_names, z_levels, title,
                                     file_name_prefix, cmap, z_names, show_color_bar,
                                     plot_mode, mincbar, maxcbar, norm=norm)
-
 
     def plot_3d_data_npdict(self, variables_dic:list, var_names:list, z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
