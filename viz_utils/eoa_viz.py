@@ -131,7 +131,7 @@ class EOAImageVisualizer:
         else:
             origin = 'upper'
 
-        if np.isnan(norm):
+        if (norm is not(None)) and (isinstance(norm, (int, float, complex))) and np.isnan(norm):
             norm = None
 
         if self._background == BackgroundType.CARTO_DEF:
@@ -157,13 +157,16 @@ class EOAImageVisualizer:
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
-                im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
+                if norm is not None:
+                    im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent, norm=norm)
+                else:
+                    im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
             else:
-                if np.isnan(mincbar):
+                if mincbar is None: 
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                 else:
                     if norm is not None:
-                        print(f"Warning, using norm and mincbar at the same time")
+                        print(f"Warning, using norm and mincbar at the same time is not recommended. Ignoring mincbar.")
                         im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                     else:
                         im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection, norm=norm)
@@ -412,17 +415,15 @@ class EOAImageVisualizer:
                     ax = _axs.flatten()[c_zlevel*len(var_names) + idx_var]
 
                 # Here we chose the min and max colorbars for each field
-                if not(np.all(np.isnan(mincbar))):
-                    if type(mincbar) is list or type(mincbar) is np.ndarray:
-                        c_mincbar = mincbar[idx_var]
-                    else:
-                        c_mincbar = mincbar
-                if not(np.all(np.isnan(maxcbar))):
-                    if type(maxcbar) is list or type(maxcbar) is np.ndarray:
-                        if maxcbar[idx_var] != None:
-                            c_maxcbar = maxcbar[idx_var]
-                    else:
-                        c_maxcbar = maxcbar
+                if type(mincbar) is list or type(mincbar) is np.ndarray:
+                    c_mincbar = mincbar[idx_var]
+                else:
+                    c_mincbar = mincbar
+                if type(maxcbar) is list or type(maxcbar) is np.ndarray:
+                    if maxcbar[idx_var] != None:
+                        c_maxcbar = maxcbar[idx_var]
+                else:
+                    c_maxcbar = maxcbar
 
                 if type(norm) is list or type(norm) is np.ndarray:
                     c_norm = norm[idx_var]
@@ -457,7 +458,7 @@ class EOAImageVisualizer:
 
         plt.tight_layout(pad=.5)
         file_name = F'{file_name_prefix}'
-        pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
+        pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight', dpi=300)
         self._close_figure()
 
     def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',
