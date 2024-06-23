@@ -96,7 +96,7 @@ class EOAImageVisualizer:
         self._contour_labels = False
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
-            print(f'{"_" + arg_name} = {self.__dict__["_" + arg_name]}')
+            # print(f'{"_" + arg_name} = {self.__dict__["_" + arg_name]}')
 
     def __getattr__(self, attr):
         '''Generic getter for all the properties of the class'''
@@ -153,7 +153,9 @@ class EOAImageVisualizer:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/etopo.png'))
             if self._background == BackgroundType.BATHYMETRY:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bathymetry_3600x1800.jpg'))
-            c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
+            # If img is not defined, then it will not plot the background
+            if 'img' in locals():
+                c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
@@ -199,7 +201,7 @@ class EOAImageVisualizer:
                 if isinstance(c_polygon, shapely.geometry.linestring.Point) or isinstance(c_polygon, shapely.geometry.multipoint.MultiPoint):
                     c_ax.scatter(x, y, transform=self._projection, c='r')
                 else:
-                    c_ax.plot(x,y, transform=self._projection, c='b', linewidth=3, linestyle='--')
+                    c_ax.plot(x,y, transform=self._projection, c='r', linewidth=3, linestyle='--')
 
             #  Adds a threshold to the plot to see the polygons
             c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
