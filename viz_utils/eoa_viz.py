@@ -38,7 +38,7 @@ def select_colormap(field_name):
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
-    elif np.any([field_name.find(x) != -1 for x in ('chlor-a', 'chlora', 'dchl', 'nchl')]):
+    elif np.any([field_name.find(x) != -1 for x in ('chlor-a', 'chlora', 'dchl', 'nchl','chl')]):
         return cmocean.cm.algae
     elif field_name.find('error') != -1:
         return cmocean.cm.diff
@@ -70,8 +70,8 @@ class EOAImageVisualizer:
     _land = False # If we want to display the land
     _ocean = False # If we want to display the ocean
     # ------ 'Local' attributes defined at each plot function
-    _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
-    _maxcbar  = np.nan
+    _mincbar = None  # User can set a min and max colorbar values to 'force' same color bar to all plots
+    _maxcbar  = None
     _flip_data = True
     # If you want to add a streamplot of a vector field. It must be a dictionary with keys x,y,u,v
     # and optional density, color, cmap, arrowsize, arrowstyle, minlength
@@ -118,7 +118,7 @@ class EOAImageVisualizer:
             else:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
 
-    def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=None) -> None:
+    def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None) -> None:
         """
         Plots a 2D img for EOA data.
         :param c_img: 2D array
@@ -336,7 +336,7 @@ class EOAImageVisualizer:
 
     def plot_4d_data_npdict(self, variables_dic:list, var_names:list, times=[], z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
-                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         """
         Plots multiple z_levels for multiple fields.
         It assumes the dimensions on the fields are (time, depth, lat, lon)
@@ -373,7 +373,7 @@ class EOAImageVisualizer:
 
     def plot_3d_data_npdict(self, variables_dic:list, var_names:list, z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
-                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         """
         Plots multiple z_levels for multiple fields.
         It assumes the dimensions on the fields are (depth, lat, lon)
@@ -405,8 +405,8 @@ class EOAImageVisualizer:
             else:
                 c_slice_txt = c_slice
 
-            c_mincbar = np.nan
-            c_maxcbar = np.nan
+            c_mincbar = None
+            c_maxcbar = None
             c_norm = None
             for idx_var, c_var in enumerate(var_names): # Iterate over the fields
                 if rows*cols == 1:  # Single figure
@@ -463,7 +463,7 @@ class EOAImageVisualizer:
 
     def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',
                             file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, 
-                            mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                            mincbar=None, maxcbar=None, norm=None):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param xr_ds:
@@ -488,7 +488,7 @@ class EOAImageVisualizer:
 
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
                             file_name_prefix='', cmap=None,  flip_data=False,
-                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]

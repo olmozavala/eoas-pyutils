@@ -21,10 +21,20 @@ from subset_dataset_oisst import oisst
 import subprocess
 
 ##% This program downloads data using PODAAC from EarthDAT
-# 1) Install PODAAC pip install podaac-data-subscriber
-# https://github.com/podaac/data-subscriber/blob/main/README.md
-
-
+# https://podaac.jpl.nasa.gov/dataset/MUR-JPL-L4-GLOB-v4.1 
+# 
+# ## Install
+# To use podac install with conda:
+# 
+# `conda install podaac-data-subscriber`
+# 
+# **You need** to have an account at https://urs.earthdata.nasa.gov/ and create a .netrc file in your home directory with your credentials. With format: 
+# 
+# ```
+# machine urs.earthdata.nasa.gov
+#     login <username>
+#     password <password>
+# ```
 
 # %%
 def par_download(proc_id):
@@ -80,7 +90,7 @@ if __name__ == '__main__':
     # def_output_folder = "/Net/work/ozavala/GOFFISH/"
     def_output_folder = "./test_data/Satellite_Data_Examples/"
 
-    # ---------------------- GHRSST ----------------------
+    # ---------------------- (SST) GHRSST MUR ----------------------
     # https://podaac.jpl.nasa.gov/dataset/MUR-JPL-L4-GLOB-v4.1  (analysis, 2002 to present)
     sst_ghrsst_v2_mur = dotdict({
         "name": "MUR-JPL-L4-GLOB-v4.1",
@@ -88,6 +98,7 @@ if __name__ == '__main__':
         "rename_files": lambda file_name: sst_ghrsst_v2_mur["split_file"](file_name.split("_")[0].split("-")[0]),
         "split_file": lambda date_str: "GHRSST_MUR_" + date_str[:4] + "-" + date_str[4:6] + "-" + date_str[6:8] + ".nc"
     })
+    # ---------------------- (SST) GHRSST CMC ----------------------
     # https://podaac.jpl.nasa.gov/dataset/CMC0.1deg-CMC-L4-GLOB-v3.0# (analysis, 2016 to present)
     sst_ghrsst_v4_cmc = dotdict({
         "name": "CMC0.1deg-CMC-L4-GLOB-v3.0",
@@ -96,7 +107,8 @@ if __name__ == '__main__':
         "split_file": lambda date_str: "GHRSST_CMC_" + date_str[:4] + "-" + date_str[4:6] + "-" + date_str[6:8] + ".nc"
     })
 
-    # https://podaac.jpl.nasa.gov/dataset/SMAP_JPL_L3_SSS_CAP_8DAY-RUNNINGMEAN_V5#capability-modal-download (2015 to present)
+    # ---------------------- (SSS) SMAP CMC ----------------------
+    # https://podaac.jpl.nasa.gov/dataset/SMAP_JPL_L3_SSS_CAP_8DAY-RUNNINGMEAN_V5# (2015 to present)
     sss_smap_v5 = dotdict({
         "name": "SMAP_JPL_L3_SSS_CAP_8DAY-RUNNINGMEAN_V5",
         "output_folder": join(def_output_folder,"SSS", "SMAP_8day"),
