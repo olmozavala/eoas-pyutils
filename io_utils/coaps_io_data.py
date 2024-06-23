@@ -5,13 +5,13 @@ from os.path import join
 import pandas as pd
 import xarray as xr
 import numpy as np
+import cftime
 from datetime import date, datetime
 
 # Only if debugging 
 import sys
 sys.path.append("../")  # (with interactive window)
 # sys.path.append("eoas_pyutils")    # (without interactive window)
-
 
 from io_utils.dates_utils import get_day_of_year_from_month_and_day
 
@@ -96,7 +96,7 @@ def get_sss_by_date(sss_folder, c_date, bbox=None):
 # %% Chlora NOAA by date
 def get_chlora_noaa_by_date(chlora_folder, c_date, bbox=None):
     '''
-    Reads salinity single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
+    Reads Chlor-a data single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
     '''
     chlora_file_name = join(chlora_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
     chlora_data = xr.load_dataset(chlora_file_name)
@@ -110,6 +110,29 @@ def get_chlora_noaa_by_date(chlora_folder, c_date, bbox=None):
     lons = chlora_data.longitude
 
     return chlora_data, lats, lons
+
+def get_chlora_noaa_by_date_range(chlora_folder, start_date, end_date, bbox=None):
+    '''
+    Reads Chlor-a data for a given date range. You can also specify a bounding box and the data will be cropped to that region.
+    '''
+    merged_chlora_data = None
+    for i, c_date in enumerate(pd.date_range(start=start_date, end=end_date, freq="1D")):
+        chlora_file_name = join(chlora_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
+
+        chlora_data = xr.load_dataset(chlora_file_name)
+        if bbox is not None:
+            # TODO for some reason the latitude field is flipped
+            chlora_data = chlora_data.sel( latitude=slice(bbox[1],bbox[0]),
+                                        longitude=slice(bbox[2], bbox[3])) 
+
+        if merged_chlora_data is None:
+            lats = chlora_data.latitude
+            lons = chlora_data.longitude
+            merged_chlora_data = chlora_data
+        else:
+            merged_chlora_data = xr.concat([merged_chlora_data, chlora_data], dim="time")
+
+    return merged_chlora_data, lats, lons
 
 
 # %% Get HYCOM GoM data by date
@@ -203,10 +226,22 @@ def get_hycom_gom_raw_by_date(c_date, bbox=None):
     return hycom_data, lats, lons
 
 # %% Get CICESE BioRun data by date
-def get_biorun_cicese_nemo_by_date(c_date, bbox=None):
-    input_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/CICESE_NEMO_GOM_RAW"
+def get_biorun_cicese_nemo_by_date(c_date, input_folder="/unity/f1/ozavala/DATA/GOFFISH/CHLORA/CICESE_NEMO_GOM_RAW", bbox=None):
+    """
+    Retrieves data from the CICESE_NEMO_GOM_RAW dataset based on a given date.
+
+    Parameters:
+    - c_date (datetime.date): The date for which the data is requested.
+    - bbox (list): A list containing the bounding box coordinates [lat_min, lat_max, lon_min, lon_max]. Default is None.
+
+    Returns:
+    - ds (xarray.Dataset): The dataset containing the requested data.
+    - lats (xarray.DataArray): The latitude values.
+    - lons (xarray.DataArray): The longitude values.
+    """
 
     c_year = c_date.year
+    cftime_date = cftime.DatetimeNoLeap(c_date.year, c_date.month, c_date.day)
 
     # Getting the dimensions of the dataset from random file
     ds = xr.open_dataset(join(input_folder, "GOM36-ERA5_0_1d_20170327_20170724_ptrc_T.nc"))
@@ -233,14 +268,19 @@ def get_biorun_cicese_nemo_by_date(c_date, bbox=None):
             ds_mld_ssh = xr.open_dataset(join(input_folder, c_mld_ssh_file))
 
             times = pd.date_range(start=c_start_date, end=c_end_date, freq="1D")
-            c_time_idx = np.argmax(times > np.datetime64(c_date))
+            c_time_idx = np.argmax(times >= np.datetime64(c_date))
+
+            sal_temp_time_idx = np.argmax(ds_sal_temp.time_average_1d.values >= cftime_date)
+            ptr_time_idx = np.argmax(ds_ptr.time_average_1d.values >= cftime_date)
+            mld_ssh_time_idx = np.argmax(ds_mld_ssh.time_average_1d.values >= cftime_date)
+
             ds = xr.Dataset( {
-                "temperature"    : (("time", "latitude", "longitude"), ds_sal_temp.votemper[c_time_idx,0,:,:].data[np.newaxis,:,:]),
-                "salinity"       : (("time", "latitude", "longitude"), ds_sal_temp.vosaline[c_time_idx,0,:,:].data[np.newaxis,:,:]),
-                "nchl"           : (("time", "latitude", "longitude"), ds_ptr.NCHL[c_time_idx,0,:,:].data[np.newaxis,:,:]),
-                "dchl"           : (("time", "latitude", "longitude"), ds_ptr.DCHL[c_time_idx,0,:,:].data[np.newaxis,:,:]),
-                "mld"            : (("time", "latitude", "longitude"), ds_mld_ssh.mld001[c_time_idx,:,:].data[np.newaxis,:,:]),
-                "ssh"            : (("time", "latitude", "longitude"), ds_mld_ssh.sossheig[c_time_idx,:,:].data[np.newaxis,:,:]),
+                "temperature"    : (("time", "latitude", "longitude"), ds_sal_temp.votemper[sal_temp_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "salinity"       : (("time", "latitude", "longitude"), ds_sal_temp.vosaline[sal_temp_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "nchl"           : (("time", "latitude", "longitude"), ds_ptr.NCHL[ptr_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "dchl"           : (("time", "latitude", "longitude"), ds_ptr.DCHL[ptr_time_idx,0,:,:].data[np.newaxis,:,:]),
+                "mld"            : (("time", "latitude", "longitude"), ds_mld_ssh.mld001[mld_ssh_time_idx,:,:].data[np.newaxis,:,:]),
+                "ssh"            : (("time", "latitude", "longitude"), ds_mld_ssh.sossheig[mld_ssh_time_idx,:,:].data[np.newaxis,:,:]),
                 # "latitude"       : (("lat"), lats.data),
                 # "longitude"      : (("lon"), lons.data),
             },
@@ -253,7 +293,105 @@ def get_biorun_cicese_nemo_by_date(c_date, bbox=None):
                                             longitude=slice(bbox[2], bbox[3])) 
             return ds, lats, lons
 
+def get_biorun_cicese_nemo_by_date_range(start_date, end_date, input_folder="/unity/f1/ozavala/DATA/GOFFISH/CHLORA/CICESE_NEMO_GOM_RAW", bbox=None):
+    """Get Bio-Run CICESE NEMO data by date range.
 
+    This function retrieves Bio-Run CICESE NEMO data for a specified date range.
+    The data can be further filtered by a bounding box if provided.
+
+    Args:
+        start_date (str): The start date of the data range in the format 'YYYY-MM-DD'.
+        end_date (str): The end date of the data range in the format 'YYYY-MM-DD'.
+        bbox (tuple, optional): The bounding box coordinates (lon_min, lat_min, lon_max, lat_max).
+            Defaults to None.
+
+    Returns:
+        list: A list of Bio-Run CICESE NEMO data for the specified date range and bounding box.
+    """
+    merged_biorun_data = None
+
+    # Getting the dimensions of the dataset from random file
+    ds = xr.open_dataset(join(input_folder, "GOM36-ERA5_0_1d_20170327_20170724_ptrc_T.nc"))
+    lats = ds.nav_lat[:,0]
+    lons = ds.nav_lon[0,:]
+
+    prev_ptr_file = None
+    c_start_date = start_date
+    c_year = start_date.year
+    cfend_time_date = cftime.DatetimeNoLeap(end_date.year, end_date.month, end_date.day)
+
+    while c_start_date < end_date:
+        cfstart_time_date = cftime.DatetimeNoLeap(start_date.year, start_date.month, start_date.day)
+        # Read all the files that contain "ptrc_T" in the name
+        ptr_files = [x for x in os.listdir(input_folder) if x.find("ptrc_T") != -1 and x.find(str(c_year)) != -1]
+        for c_ptr_file in ptr_files:
+            # Create a date for the start date of the file. It is the 4th element of the file name and the format is YYYYMMDD
+            file_start_date = date(int(c_ptr_file.split("_")[3][0:4]), int(c_ptr_file.split("_")[3][4:6]), int(c_ptr_file.split("_")[3][6:8]))
+            file_end_date = date(int(c_ptr_file.split("_")[4][0:4]), int(c_ptr_file.split("_")[4][4:6]), int(c_ptr_file.split("_")[4][6:8]))
+            # Verify the desired date is withing the range of dates
+            if c_start_date >= file_start_date and c_start_date <= file_end_date:
+                c_sal_temp_file = c_ptr_file.replace("ptrc_T", "grid_T_SAL_TEMP")
+                c_mld_ssh_file = c_ptr_file.replace("ptrc_T", "grid_T_MLD_SSH")
+
+                if c_ptr_file != prev_ptr_file:
+                    print(f"Loading {c_ptr_file}  - Current date range: {c_start_date} - {end_date}")
+                    prev_ptr_file = c_ptr_file
+                    # PTR file -> DCHL, NCHL
+                    # T_SAL_TEMP -> vosaline, votemper
+                    # MLD_SSH -> mld001, sossheig
+                    ds_ptr = xr.open_dataset(join(input_folder, c_ptr_file))
+                    ds_sal_temp = xr.open_dataset(join(input_folder, c_sal_temp_file))
+                    ds_mld_ssh = xr.open_dataset(join(input_folder, c_mld_ssh_file))
+                else:
+                    print(f"Skipping {c_ptr_file}  - Current date range: {c_start_date} - {end_date}")
+
+                times = pd.date_range(start=file_start_date, end=file_end_date, freq="1D")
+
+                # Obtain the indexes where the time is greater than the start date and smaller than the end date
+                sal_temp_time_idx = np.where(np.logical_and(ds_sal_temp.time_average_1d.values >= cfstart_time_date, ds_sal_temp.time_average_1d.values <= cfend_time_date))[0]
+                ptr_time_idx = np.where(np.logical_and(ds_ptr.time_average_1d.values >= cfstart_time_date, ds_ptr.time_average_1d.values <= cfend_time_date))[0]
+                mld_ssh_time_idx = np.where(np.logical_and(ds_mld_ssh.time_average_1d.values >= cfstart_time_date, ds_mld_ssh.time_average_1d.values <= cfend_time_date))[0]
+                time_idx = sal_temp_time_idx
+
+                # assert len(sal_temp_time_idx) == len(ptr_time_idx) == len(mld_ssh_time_idx), "The number of time indexes is not the same!"
+                if not (len(sal_temp_time_idx) == len(ptr_time_idx) == len(mld_ssh_time_idx)):
+                    # Choose the one with the smalles lenght and use that as the limit
+                    min_len = min(len(sal_temp_time_idx), len(ptr_time_idx), len(mld_ssh_time_idx))
+                    sal_temp_time_idx = sal_temp_time_idx[:min_len]
+                    ptr_time_idx = ptr_time_idx[:min_len]
+                    mld_ssh_time_idx = mld_ssh_time_idx[:min_len]
+                    time_idx = time_idx[:min_len]
+                    
+
+                ds = xr.Dataset( {
+                    "temperature"    : (("time", "latitude", "longitude"), ds_sal_temp.votemper[sal_temp_time_idx,0,:,:].data[np.newaxis,:,:].squeeze()),
+                    "salinity"       : (("time", "latitude", "longitude"), ds_sal_temp.vosaline[sal_temp_time_idx,0,:,:].data[np.newaxis,:,:].squeeze()),
+                    "nchl"           : (("time", "latitude", "longitude"), ds_ptr.NCHL[ptr_time_idx,0,:,:].data[np.newaxis,:,:].squeeze()),
+                    "dchl"           : (("time", "latitude", "longitude"), ds_ptr.DCHL[ptr_time_idx,0,:,:].data[np.newaxis,:,:].squeeze()),
+                    "mld"            : (("time", "latitude", "longitude"), ds_mld_ssh.mld001[mld_ssh_time_idx,:,:].data[np.newaxis,:,:].squeeze()),
+                    "ssh"            : (("time", "latitude", "longitude"), ds_mld_ssh.sossheig[mld_ssh_time_idx,:,:].data[np.newaxis,:,:].squeeze()),
+                    # "latitude"       : (("lat"), lats.data),
+                    # "longitude"      : (("lon"), lons.data),
+                },
+                {"time": times[sal_temp_time_idx], "latitude": lats.data, "longitude": lons.data})
+
+                ds.attrs = ds_ptr.attrs
+
+                if bbox is not None:
+                    ds = ds.sel(latitude=slice(bbox[0],bbox[1]),
+                                                longitude=slice(bbox[2], bbox[3])) 
+
+                if merged_biorun_data is None:
+                    merged_biorun_data = ds
+                else:
+                    merged_biorun_data = xr.concat([merged_biorun_data, ds], dim="time")
+
+                c_start_date = file_end_date + pd.Timedelta(days=1)
+                break
+
+    return merged_biorun_data, merged_biorun_data.latitude.values, merged_biorun_data.longitude.values
+
+    
 # %% Main just for testing
 if __name__ == "__main__":
     import matplotlib.pyplot as plt

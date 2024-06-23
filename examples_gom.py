@@ -7,7 +7,7 @@ from proc_utils.gom import lc_from_ssh, lc_from_date
 
 #%% ============ From specific AVISO file compute the LC
 print("Reading data...")
-input_file = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/GoM/2001-03.nc"
+input_file = "test_data/Satellite_data_Examples/aviso_2012-06.nc"
 adt = xr.open_dataset(input_file, decode_times=False)
 
 bbox= (-94, -80, 20, 30)
@@ -32,7 +32,7 @@ mylinestring = LineString(list(lc))
 viz_obj.__setattr__('additional_polygons', [mylinestring])
 viz_obj.plot_2d_data_np(adt_slice, ['adt'], 'LC', 'filepref', plot_mode=PlotMode.RASTER)
 
-#%% ============ From a date read the LC 
+#%% ============ From a date read the LC (from a pickle file inside COAPS)
 import datetime
 start_date = datetime.datetime(2001, 3, 1)
 
@@ -52,3 +52,4 @@ viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_fold
 mylinestring = LineString(list(lc))
 viz_obj.__setattr__('additional_polygons', [mylinestring])
 viz_obj.plot_2d_data_np(adt_slice, ['adt'], 'LC', 'filepref', plot_mode=PlotMode.RASTER)
+# %%

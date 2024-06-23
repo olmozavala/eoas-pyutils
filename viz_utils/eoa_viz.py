@@ -29,7 +29,7 @@ def select_colormap(field_name):
 
     '''
     field_name = field_name.lower()
-    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el')]):
+    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el','sla')]):
         # cmaps_fields.append(cmocean.cm.deep_r)
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
@@ -44,7 +44,7 @@ def select_colormap(field_name):
         return cmocean.cm.diff
     elif field_name.find('binary') != -1:
         return cmocean.cm.oxy
-    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity')]):
+    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity','ugos','vgos')]):
         return cmocean.cm.speed
 
 
@@ -66,7 +66,9 @@ class EOAImageVisualizer:
     _show_var_names = False  # Includes the name of the field name in the titles
     _contourf = False  # When plotting non-regular grids and need precision
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
-    _coastline = False # If we want to display the coastline
+    _coastline = True # If we want to display the coastline
+    _land = False # If we want to display the land
+    _ocean = False # If we want to display the ocean
     # ------ 'Local' attributes defined at each plot function
     _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
     _maxcbar  = np.nan
@@ -129,7 +131,7 @@ class EOAImageVisualizer:
         else:
             origin = 'upper'
 
-        if np.isnan(norm):
+        if (norm is not(None)) and (isinstance(norm, (int, float, complex))) and np.isnan(norm):
             norm = None
 
         if self._background == BackgroundType.CARTO_DEF:
@@ -138,6 +140,8 @@ class EOAImageVisualizer:
             ax.set_facecolor("white")
         elif self._background == BackgroundType.BLACK:
             ax.set_facecolor("black")
+        elif self._background == BackgroundType.GREY:
+            ax.set_facecolor("grey")
         elif self._background == BackgroundType.NONE:
             print("No background")
         else:
@@ -155,13 +159,16 @@ class EOAImageVisualizer:
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
-                im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
+                if norm is not None:
+                    im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent, norm=norm)
+                else:
+                    im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
             else:
-                if np.isnan(mincbar):
+                if mincbar is None: 
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                 else:
                     if norm is not None:
-                        print(f"Warning, using norm and mincbar at the same time")
+                        print(f"Warning, using norm and mincbar at the same time is not recommended. Ignoring mincbar.")
                         im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                     else:
                         im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection, norm=norm)
@@ -201,6 +208,12 @@ class EOAImageVisualizer:
 
         if self._coastline:
             c_ax.coastlines()
+
+        if self._land:
+            c_ax.add_feature(cartopy.feature.LAND, edgecolor='black')
+            
+        if self._ocean:
+            c_ax.add_feature(cartopy.feature.OCEAN, edgecolor='black')
 
         if self._vector_field != None:
             try:
@@ -277,7 +290,6 @@ class EOAImageVisualizer:
         bbox = (minLon, maxLon, minLat, maxLat)
         return bbox
 
-
     def add_roads(self, ax):
         # Names come from: https://www.naturalearthdata.com/features/
         # -- Add states
@@ -320,7 +332,7 @@ class EOAImageVisualizer:
         ax.gridlines()
         im = ax.scatter(lons, lats, s=s, c=c, cmap=cmap)
         fig.colorbar(im, ax=ax, shrink=0.7)
-        ax.coastlines()
+        ax.coastlines(resolution='10m')
         plt.title(title)
         plt.show()
 
@@ -360,7 +372,6 @@ class EOAImageVisualizer:
             self.plot_3d_data_npdict(c_time_vars_dic, var_names, z_levels, title,
                                     file_name_prefix, cmap, z_names, show_color_bar,
                                     plot_mode, mincbar, maxcbar, norm=norm)
-
 
     def plot_3d_data_npdict(self, variables_dic:list, var_names:list, z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
@@ -406,17 +417,15 @@ class EOAImageVisualizer:
                     ax = _axs.flatten()[c_zlevel*len(var_names) + idx_var]
 
                 # Here we chose the min and max colorbars for each field
-                if not(np.all(np.isnan(mincbar))):
-                    if type(mincbar) is list or type(mincbar) is np.ndarray:
-                        c_mincbar = mincbar[idx_var]
-                    else:
-                        c_mincbar = mincbar
-                if not(np.all(np.isnan(maxcbar))):
-                    if type(maxcbar) is list or type(maxcbar) is np.ndarray:
-                        if maxcbar[idx_var] != None:
-                            c_maxcbar = maxcbar[idx_var]
-                    else:
-                        c_maxcbar = maxcbar
+                if type(mincbar) is list or type(mincbar) is np.ndarray:
+                    c_mincbar = mincbar[idx_var]
+                else:
+                    c_mincbar = mincbar
+                if type(maxcbar) is list or type(maxcbar) is np.ndarray:
+                    if maxcbar[idx_var] != None:
+                        c_maxcbar = maxcbar[idx_var]
+                else:
+                    c_maxcbar = maxcbar
 
                 if type(norm) is list or type(norm) is np.ndarray:
                     c_norm = norm[idx_var]
@@ -451,7 +460,7 @@ class EOAImageVisualizer:
 
         plt.tight_layout(pad=.5)
         file_name = F'{file_name_prefix}'
-        pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
+        pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight', dpi=300)
         self._close_figure()
 
     def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',

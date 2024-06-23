@@ -85,7 +85,6 @@ def download_biorun_data_raw(output_folder):
 input_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/CICESE_NEMO_GOM_RAW"
 output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/CICESE_NEMO_GOM"
 
-
 c_date = date(2019, 1, 10)
 c_date_str = c_date.strftime("%Y-%m-%d")
 c_year = c_date.year
