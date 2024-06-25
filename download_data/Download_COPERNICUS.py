@@ -1,19 +1,12 @@
 # %% 
 # INSTALL:
-# mamba install conda-forge::copernicusmarine --yes
+# mamba install conda-forge::copernicusmarine
 # copernicusmarine get --help
 
+from calendar import monthrange
 import os
-# Get the current working directory
-current_directory = os.getcwd()
-
-# Check if 'download_data' directory exists in the current directory
-if current_directory.find("download_data") != -1:
-    os.chdir(current_directory.replace("download_data", ""))
-else:
-    print("'download_data' directory not found in the current working directory.")
-print(f"Current working directory: {os.getcwd()}")
-
+import sys
+sys.path.append("/unity/f1/ozavala/CODE/lce_ml_detection/eoas_pyutils") # Just when running this file directly for testing
 # %%
 import copernicusmarine as cm
 from download_data.Copernicus_Datasets import Copernicus_Datasets, Copernicus_Enum
@@ -26,9 +19,16 @@ print(f"Version of copernicusmarine: {cm.__version__}")
 secrets = netrc.netrc()
 username, account, password = secrets.hosts['COPERNICUS']
 
+# %% -------- Download data by year ----------
 def download_by_year(year, cop_ds, bbox, output_folder):
     start_date = datetime.date(year,1,1)
     end_date = datetime.date(year,12,31)
+
+    if cop_ds['short_name'] != '':
+        output_filename = f"{cop_ds['short_name']}_{start_date.year}.nc"
+    else:
+        output_filename = f"{start_date.year}.nc"
+
     cm.subset(
         dataset_id=cop_ds['id'],
         dataset_version=cop_ds['version'],
@@ -39,41 +39,53 @@ def download_by_year(year, cop_ds, bbox, output_folder):
         maximum_latitude=bbox[3],
         start_datetime=start_date.strftime("%Y-%m-%dT00:00:00"),
         end_datetime=end_date.strftime("%Y-%m-%dT00:00:00"),
-        output_filename=f"{cop_ds['short_name']}_{start_date.year}.nc",
+        output_filename=output_filename,
         output_directory=output_folder,
         username=username,
         password=password,
         force_download=True
     )
 
+# %% -------- Download data by month ----------
+def download_by_month(year, cop_ds, bbox, output_folder):
+    for month in range(1, 13):
+        month = 5
+        start_date = datetime.date(year,month,1)
+        end_date = datetime.date(year, month, monthrange(year, month)[1])
+        if cop_ds['short_name'] != '':
+            output_filename = f"{cop_ds['short_name']}_{start_date.year}-{start_date.month:02d}.nc"
+        else:
+            output_filename = f"{start_date.year}-{start_date.month:02d}.nc"
+
+        cm.subset(
+            dataset_id=cop_ds['id'],
+            dataset_version=cop_ds['version'],
+            variables= cop_ds['variables'],
+            minimum_longitude=bbox[0],
+            maximum_longitude=bbox[2],
+            minimum_latitude=bbox[1],
+            maximum_latitude=bbox[3],
+            start_datetime=start_date.strftime("%Y-%m-%dT00:00:00"),
+            end_datetime=end_date.strftime("%Y-%m-%dT00:00:00"),
+            output_filename=output_filename,
+            output_directory=output_folder,
+            username=username,
+            password=password,
+            force_download=True
+        )
+        break
 
 # %% -------- Download data by year ----------
-bbox = (-99.0, 17.0, -74.0, 31.0) # This is the default BBOX for GoM
-cop_ds = Copernicus_Datasets[Copernicus_Enum.CHLORA_L3_D]
-for c_year in range(2022, 2024):
-    # output_folder = "test_data/Satellite_Data_Examples/"
-    # output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS"
-    output_folder = "~/Downloads"
-    download_by_year(c_year, cop_ds, bbox, output_folder)
+bbox = (-98.25, 7.25, -55.0, 50.0) # DO NOT DELETE THIS LINE, THIS BBOX ARE IMPORTANT!
+
+cop_ds = Copernicus_Datasets[Copernicus_Enum.SSH_DUACS_L4_D_2022]
+
+output_folder = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/GoM/"
+
+for c_year in range(2016, 2017):
+    # download_by_year(c_year, cop_ds, bbox, output_folder)
+    download_by_month(c_year, cop_ds, bbox, output_folder)
 
 # %% TODO Understand: 
 # export COPERNICUSMARINE_DISABLE_SSL_CONTEXT=True
 # export COPERNICUSMARINE_MAX_CONCURRENT_REQUESTS=7
-# %% 
-# cm.subset(
-#     dataset_id=cop_ds['id'],
-#     dataset_version=cop_ds['version'],
-#     variables= cop_ds['variables'],
-#     minimum_longitude=bbox[0],
-#     maximum_longitude=bbox[2],
-#     minimum_latitude=bbox[1],
-#     maximum_latitude=bbox[3],
-#     start_datetime=start_date.strftime("%Y-%m-%dT00:00:00"),
-#     end_datetime=end_date.strftime("%Y-%m-%dT00:00:00"),
-#     output_filename=f"{cop_ds['short_name']}_{start_date.year}.nc",
-#     output_directory=output_folder,
-#     username=username,
-#     password=password,
-#     force_download=True
-# )
-

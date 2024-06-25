@@ -1,3 +1,7 @@
+# Add io_utils to the path
+import sys
+sys.path.append("/unity/f1/ozavala/CODE/lce_ml_detection/eoas_pyutils")
+
 import subprocess
 import netrc
 from calendar import monthrange
@@ -7,20 +11,20 @@ from io_utils.io_common import create_folder
 secrets = netrc.netrc()
 username, account, password = secrets.hosts['AVISO']
 
-# output_folder = "/Net/work/ozavala/GOFFISH/AVISO"
+output_folder = "/Net/work/ozavala/GOFFISH/AVISO/GoM"
 #output_folder = "/Net/work/ozavala/DATA/GOFFISH/AVISO/NE_Pacific"
 #output_folder = "./NE_Pacific"
 #output_folder = "./NW_Pacific"
 #output_folder = "./Japan"
 #output_folder = "/Net/work/ozavala/DATA/GOFFISH/AVISO/Japan/"
-output_folder = "/data/COAPS_Net/work/ozavala/DATA/GOFFISH/AVISO/Japan/"
+# output_folder = "/data/COAPS_Net/work/ozavala/DATA/GOFFISH/AVISO/Japan/"
 create_folder(output_folder)
 
 print(output_folder)
 
 # --- GoM ----
-#lon = [262, 305]  # [-98, -60]  GoM
-#lat = [7.5, 50]
+lon = [262, 305]  # [-98, -60]  GoM
+lat = [7.5, 50]
 
 # --- NE Pacific ----
 #lon = [125, 180]  # [-98, -60]  GoM
@@ -31,10 +35,10 @@ print(output_folder)
 #lat = [0, 60]
 
 # --- Japan ----
-lon = [115, 150]  # [-98, -60]  GoM
-lat = [5, 40]
+# lon = [115, 150]  # [-98, -60]  GoM
+# lat = [5, 40]
 
-years = range(1993, 1994)
+years = range(2022, 2024)
 
 # https://resources.marine.copernicus.eu/product-detail/SEALEVEL_GLO_PHY_L4_MY_008_047/INFORMATION
 # Full range is Valid range is: [1993-01-01 00:00:00,2022-02-09 00:00:00].
