@@ -4,11 +4,15 @@
 from enum import Enum
 
 class Copernicus_Enum(Enum):
+    # Ch
     CHLORA_L3_D = 1 # https://data.marine.copernicus.eu/product/OCEANCOLOUR_GLO_BGC_L3_MY_009_103/description
-    SST_ODYSSEA_L3_D = 2 # https://data.marine.copernicus.eu/product/SST_GLO_SST_L3S_NRT_OBSERVATIONS_010_010/description
-    SST_OSTIA_L4_D = 3 # https://data.marine.copernicus.eu/product/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/description
-    SSH_DUACS_L4_D_2022 = 4 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L4_NRT_008_046/description
-    SSH_DUACS_L4_D_1993 = 4 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L4_MY_008_047/description
+    CHLORA_L4_D_1997 = 2 # https://data.marine.copernicus.eu/product/OCEANCOLOUR_GLO_BGC_L4_MY_009_104/description
+
+    SST_ODYSSEA_L3_D = 20 # https://data.marine.copernicus.eu/product/SST_GLO_SST_L3S_NRT_OBSERVATIONS_010_010/description
+    SST_OSTIA_L4_D = 21 # https://data.marine.copernicus.eu/product/SST_GLO_SST_L4_NRT_OBSERVATIONS_010_001/description
+
+    SSH_DUACS_L4_D_2022 = 30 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L4_NRT_008_046/description
+    SSH_DUACS_L4_D_1993 = 31 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L4_MY_008_047/description
 
 # Create a dictionary with the Copernicus datasets
 Copernicus_Datasets = {
@@ -39,6 +43,15 @@ Copernicus_Datasets = {
         'start_date': '?',
         'resolution': '4km 0.036',
         'variables': ["CHL", "MICRO", "MICRO_BIAS", "MICRO_RMSE", "NANO", "NANO_BIAS", "NANO_RMSE", "PICO", "PICO_BIAS", "PICO_RMSE"],
+    },
+    Copernicus_Enum.CHLORA_L4_D_1997: {
+        'name': 'Global Ocean Colour (Copernicus-GlobColour), Bio-Geo-Chemical, L4 (monthly and interpolated) from Satellite Observations (1997-ongoing)',
+        'short_name': 'Ocean_Color',
+        'id': 'cmems_obs-oc_glo_bgc-plankton_my_l4-gapfree-multi-4km_P1D',
+        'version': '202311',
+        'start_date': '1997',
+        'resolution': '4km 0.036',
+        'variables': ["CHL", "CHL_uncertainty", "flags"],
     },
     Copernicus_Enum.SST_ODYSSEA_L3_D: {
         'name': 'ODYSSEA Global Ocean - Sea Surface Temperature Multi-sensor L3 Observations',

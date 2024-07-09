@@ -49,7 +49,6 @@ def download_by_year(year, cop_ds, bbox, output_folder):
 # %% -------- Download data by month ----------
 def download_by_month(year, cop_ds, bbox, output_folder):
     for month in range(1, 13):
-        month = 5
         start_date = datetime.date(year,month,1)
         end_date = datetime.date(year, month, monthrange(year, month)[1])
         if cop_ds['short_name'] != '':
@@ -78,13 +77,14 @@ def download_by_month(year, cop_ds, bbox, output_folder):
 # %% -------- Download data by year ----------
 bbox = (-98.25, 7.25, -55.0, 50.0) # DO NOT DELETE THIS LINE, THIS BBOX ARE IMPORTANT!
 
-cop_ds = Copernicus_Datasets[Copernicus_Enum.SSH_DUACS_L4_D_2022]
+cop_ds = Copernicus_Datasets[Copernicus_Enum.CHLORA_L4_D_1997]
 
-output_folder = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/GoM/"
+# output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS"
+output_folder = "/tmp/OZ/"
 
-for c_year in range(2016, 2017):
-    # download_by_year(c_year, cop_ds, bbox, output_folder)
-    download_by_month(c_year, cop_ds, bbox, output_folder)
+for c_year in range(2000, 2024):
+    download_by_year(c_year, cop_ds, bbox, output_folder)
+    # download_by_month(c_year, cop_ds, bbox, output_folder)
 
 # %% TODO Understand: 
 # export COPERNICUSMARINE_DISABLE_SSL_CONTEXT=True

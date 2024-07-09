@@ -1,7 +1,7 @@
 # Testing the provided functions
 import pytest
 import matplotlib.pyplot as plt
-from io_utils.coaps_io_data import get_aviso_by_date, get_aviso_by_month, get_sss_by_date, get_sst_by_date, get_chlora_noaa_by_date
+from io_utils.coaps_io_data import get_aviso_by_date, get_aviso_by_month, get_sss_by_date, get_sst_ghrsst_by_date, get_chlora_noaa_by_date
 from io_utils.dates_utils import get_day_of_year_from_month_and_day 
 from datetime import datetime
 
@@ -32,7 +32,7 @@ def test_satellite_sst():
     sst_folder = "/unity/f1/ozavala/DATA/GOFFISH/SST/OISST"
 
     print(f"Reading SST data... ")
-    sst_data, lats, lons = get_sst_by_date(sst_folder, c_date, bbox)
+    sst_data, lats, lons = get_sst_ghrsst_by_date(sst_folder, c_date, bbox)
     assert sst_data.analysed_sst.shape == (1, 1351, 2201)
     assert lats.size == (1351)
     assert lons.size == (2201)

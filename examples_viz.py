@@ -1,9 +1,9 @@
 #%%
 import sys
-sys.path.append("hycom_utils/python")
+# sys.path.append("hycom_utils/python")
+sys.path.append("/unity/f1/ozavala/CODE/lce_ml_detection/eoas_pyutils") # Just when running this file directly for testing
 
-from hycom.io import read_hycom_fields, subset_hycom_field, read_hycom_coords
-from hycom.info import read_field_names
+from matplotlib.colors import LogNorm
 import xarray as xr
 import numpy as np
 from viz_utils.eoa_viz import EOAImageVisualizer
@@ -11,7 +11,9 @@ from viz_utils.constants import PlotMode, BackgroundType
 from shapely.geometry import LineString, Polygon, MultiPoint, Point
 import cmocean.cm as ccm
 
-#%% ==================== 3D =========================================
+#%% ==================== HYCOM =========================================
+from hycom.io import read_hycom_fields, subset_hycom_field, read_hycom_coords
+from hycom.info import read_field_names
 # ------------ HYCOM -----------
 print("Reading data...")
 input_file = "./hycom_utils/test_data/archv.2009_153_00.a"
@@ -37,7 +39,7 @@ viz_obj.plot_3d_data_npdict(hycom_fields, ['temp','u-vel.'], [0], 'MyTitle', 'my
 hycom_fields['temp']
 print("Done!")
 
-#%% ------------ NetCDF 4D -----------
+#%% ================ 4D ====================
 print("Reading data...")
 input_file = "./test_data/hycom_gom.nc"
 df = xr.load_dataset(input_file, decode_times=False)
@@ -50,7 +52,7 @@ viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_fold
 viz_obj.plot_4d_data_npdict(df, ['water_temp', 'salinity'], z_levels=[0], title='Temp and Salinity', file_name_prefix='4d')
 print("Done!")
 
-#%% ====================  3D =========================================
+#%% ====================  3D it can be depth or time but it is considered 3D=========================================
 print("Reading data...")
 input_file = "./test_data/ecmwf_era_interim_2012-08-01.nc"
 df = xr.load_dataset(input_file)
@@ -82,6 +84,12 @@ viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'U Raster', '2d_raster', plot_mode=P
 viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'U Contour', '2d_contour', plot_mode=PlotMode.CONTOUR)
 viz_obj.plot_2d_data_np(npdata_2d, ['u10'], 'U Merged', '2d_merged', plot_mode=PlotMode.MERGED)
 print("Done!")
+
+#%% ====================  Normalizing =========================================
+viz_obj = EOAImageVisualizer(lats=lats, lons=lons, disp_images=True, output_folder="outputs",
+                             eoas_pyutils_path=".", show_var_names=True, contour_labels=[4])
+
+viz_obj.plot_2d_data_np(npdata_2d, ['u10','v10'], 'U and V', '2d_u_and_v', norm=LogNorm())
 
 #%% ========= Include vector shape ==============
 # --- Linestring

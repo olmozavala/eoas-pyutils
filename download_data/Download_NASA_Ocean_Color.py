@@ -11,6 +11,7 @@ end_date = datetime.datetime(2010, 1, 2)
 output_folder = "./test_data/Satellite_Data_Examples/"
 
 # EXAMPLE https://oceandata.sci.gsfc.nasa.gov/cgi/getfile/JPSS1_VIIRS.20180121.L3m.DAY.CHL.chlor_a.4km.nc
+https://oceandata.sci.gsfc.nasa.gov/ob/getfile/AQUA_MODIS.20141205T191009.L2.SST.nc
 # EXAMPLE https://oceandata.sci.gsfc.nasa.gov
 
 
