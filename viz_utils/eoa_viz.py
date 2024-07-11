@@ -29,7 +29,7 @@ def select_colormap(field_name):
 
     '''
     field_name = field_name.lower()
-    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el')]):
+    if np.any([field_name.find(x) != -1 for x in ('ssh', 'srfhgt', 'adt','surf_el','sla')]):
         # cmaps_fields.append(cmocean.cm.deep_r)
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('temp', 'sst', 'temperature')]):
@@ -38,13 +38,13 @@ def select_colormap(field_name):
         return cmocean.cm.curl
     elif np.any([field_name.find(x) != -1 for x in ('salin', 'sss', 'sal')]):
         return cmocean.cm.haline
-    elif np.any([field_name.find(x) != -1 for x in ('chlor-a', 'chlora', 'dchl', 'nchl')]):
+    elif np.any([field_name.find(x) != -1 for x in ('chlor-a', 'chlora', 'dchl', 'nchl','chl')]):
         return cmocean.cm.algae
     elif field_name.find('error') != -1:
         return cmocean.cm.diff
     elif field_name.find('binary') != -1:
         return cmocean.cm.oxy
-    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity')]):
+    elif np.any([field_name.find(x) != -1 for x in ('u_', 'v_', 'u-vel.', 'v-vel.','velocity','ugos','vgos')]):
         return cmocean.cm.speed
 
 
@@ -66,10 +66,12 @@ class EOAImageVisualizer:
     _show_var_names = False  # Includes the name of the field name in the titles
     _contourf = False  # When plotting non-regular grids and need precision
     _additional_polygons = []  # MUST BE SHAPELY GEOMETRIES In case we want to include additional polygons in the plots (all of them)
-    _coastline = False # If we want to display the coastline
+    _coastline = True # If we want to display the coastline
+    _land = False # If we want to display the land
+    _ocean = False # If we want to display the ocean
     # ------ 'Local' attributes defined at each plot function
-    _mincbar = np.nan  # User can set a min and max colorbar values to 'force' same color bar to all plots
-    _maxcbar  = np.nan
+    _mincbar = None  # User can set a min and max colorbar values to 'force' same color bar to all plots
+    _maxcbar  = None
     _flip_data = True
     # If you want to add a streamplot of a vector field. It must be a dictionary with keys x,y,u,v
     # and optional density, color, cmap, arrowsize, arrowstyle, minlength
@@ -94,7 +96,7 @@ class EOAImageVisualizer:
         self._contour_labels = False
         for arg_name, arg_value in kwargs.items():
             self.__dict__["_" + arg_name] = arg_value
-            print(f'{"_" + arg_name} = {self.__dict__["_" + arg_name]}')
+            # print(f'{"_" + arg_name} = {self.__dict__["_" + arg_name]}')
 
     def __getattr__(self, attr):
         '''Generic getter for all the properties of the class'''
@@ -116,7 +118,7 @@ class EOAImageVisualizer:
             else:
                 cbar.set_label(self._units, fontsize=font_size_cbar*1.2)
 
-    def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=None) -> None:
+    def plot_slice_eoa(self, c_img, ax, cmap='gray', mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None) -> None:
         """
         Plots a 2D img for EOA data.
         :param c_img: 2D array
@@ -129,7 +131,7 @@ class EOAImageVisualizer:
         else:
             origin = 'upper'
 
-        if np.isnan(norm):
+        if (norm is not(None)) and (isinstance(norm, (int, float, complex))) and np.isnan(norm):
             norm = None
 
         if self._background == BackgroundType.CARTO_DEF:
@@ -138,6 +140,8 @@ class EOAImageVisualizer:
             ax.set_facecolor("white")
         elif self._background == BackgroundType.BLACK:
             ax.set_facecolor("black")
+        elif self._background == BackgroundType.GREY:
+            ax.set_facecolor("grey")
         elif self._background == BackgroundType.NONE:
             print("No background")
         else:
@@ -149,17 +153,22 @@ class EOAImageVisualizer:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/etopo.png'))
             if self._background == BackgroundType.BATHYMETRY:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bathymetry_3600x1800.jpg'))
-            c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
+            # If img is not defined, then it will not plot the background
+            if 'img' in locals():
+                c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
-                im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
+                if norm is not None:
+                    im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent, norm=norm)
+                else:
+                    im = c_ax.contourf(self._lons, self._lats, c_img, 128, cmap=cmap, extent=self._extent)
             else:
-                if np.isnan(mincbar):
+                if mincbar is None: 
                     im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                 else:
                     if norm is not None:
-                        print(f"Warning, using norm and mincbar at the same time")
+                        print(f"Warning, using norm and mincbar at the same time is not recommended. Ignoring mincbar.")
                         im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, transform=self._projection, norm=norm)
                     else:
                         im = c_ax.imshow(c_img, extent=self._extent, origin=origin, cmap=cmap, vmin=mincbar, vmax=maxcbar, transform=self._projection, norm=norm)
@@ -192,13 +201,19 @@ class EOAImageVisualizer:
                 if isinstance(c_polygon, shapely.geometry.linestring.Point) or isinstance(c_polygon, shapely.geometry.multipoint.MultiPoint):
                     c_ax.scatter(x, y, transform=self._projection, c='r')
                 else:
-                    c_ax.plot(x,y, transform=self._projection, c='b', linewidth=3, linestyle='--')
+                    c_ax.plot(x,y, transform=self._projection, c='r', linewidth=3, linestyle='--')
 
             #  Adds a threshold to the plot to see the polygons
             c_ax.set_extent(self.getExtent(list(self._lats) + pol_lats, list(self._lons) + pol_lons, 0.5))
 
         if self._coastline:
             c_ax.coastlines()
+
+        if self._land:
+            c_ax.add_feature(cartopy.feature.LAND, edgecolor='black')
+            
+        if self._ocean:
+            c_ax.add_feature(cartopy.feature.OCEAN, edgecolor='black')
 
         if self._vector_field != None:
             try:
@@ -275,7 +290,6 @@ class EOAImageVisualizer:
         bbox = (minLon, maxLon, minLat, maxLat)
         return bbox
 
-
     def add_roads(self, ax):
         # Names come from: https://www.naturalearthdata.com/features/
         # -- Add states
@@ -318,13 +332,13 @@ class EOAImageVisualizer:
         ax.gridlines()
         im = ax.scatter(lons, lats, s=s, c=c, cmap=cmap)
         fig.colorbar(im, ax=ax, shrink=0.7)
-        ax.coastlines()
+        ax.coastlines(resolution='10m')
         plt.title(title)
         plt.show()
 
     def plot_4d_data_npdict(self, variables_dic:list, var_names:list, times=[], z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
-                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         """
         Plots multiple z_levels for multiple fields.
         It assumes the dimensions on the fields are (time, depth, lat, lon)
@@ -359,10 +373,9 @@ class EOAImageVisualizer:
                                     file_name_prefix, cmap, z_names, show_color_bar,
                                     plot_mode, mincbar, maxcbar, norm=norm)
 
-
     def plot_3d_data_npdict(self, variables_dic:list, var_names:list, z_levels= [], title='',
                           file_name_prefix='', cmap=None, z_names = [],
-                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                          show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         """
         Plots multiple z_levels for multiple fields.
         It assumes the dimensions on the fields are (depth, lat, lon)
@@ -394,8 +407,8 @@ class EOAImageVisualizer:
             else:
                 c_slice_txt = c_slice
 
-            c_mincbar = np.nan
-            c_maxcbar = np.nan
+            c_mincbar = None
+            c_maxcbar = None
             c_norm = None
             for idx_var, c_var in enumerate(var_names): # Iterate over the fields
                 if rows*cols == 1:  # Single figure
@@ -404,17 +417,15 @@ class EOAImageVisualizer:
                     ax = _axs.flatten()[c_zlevel*len(var_names) + idx_var]
 
                 # Here we chose the min and max colorbars for each field
-                if not(np.all(np.isnan(mincbar))):
-                    if type(mincbar) is list or type(mincbar) is np.ndarray:
-                        c_mincbar = mincbar[idx_var]
-                    else:
-                        c_mincbar = mincbar
-                if not(np.all(np.isnan(maxcbar))):
-                    if type(maxcbar) is list or type(maxcbar) is np.ndarray:
-                        if maxcbar[idx_var] != None:
-                            c_maxcbar = maxcbar[idx_var]
-                    else:
-                        c_maxcbar = maxcbar
+                if type(mincbar) is list or type(mincbar) is np.ndarray:
+                    c_mincbar = mincbar[idx_var]
+                else:
+                    c_mincbar = mincbar
+                if type(maxcbar) is list or type(maxcbar) is np.ndarray:
+                    if maxcbar[idx_var] != None:
+                        c_maxcbar = maxcbar[idx_var]
+                else:
+                    c_maxcbar = maxcbar
 
                 if type(norm) is list or type(norm) is np.ndarray:
                     c_norm = norm[idx_var]
@@ -449,12 +460,12 @@ class EOAImageVisualizer:
 
         plt.tight_layout(pad=.5)
         file_name = F'{file_name_prefix}'
-        pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight')
+        pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight', dpi=300)
         self._close_figure()
 
     def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',
                             file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, 
-                            mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                            mincbar=None, maxcbar=None, norm=None):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param xr_ds:
@@ -479,7 +490,7 @@ class EOAImageVisualizer:
 
     def plot_2d_data_np(self, np_variables:list, var_names:list, title='',
                             file_name_prefix='', cmap=None,  flip_data=False,
-                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=np.nan, maxcbar=np.nan, norm=np.nan):
+                            rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         '''
         Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
         :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]
