@@ -17,12 +17,14 @@ def parallel_sss_download(output_folder, years, proc_id=0, TOT_PROC=1):
                 URL = F"https://data.remss.com/smap/SSS/V05.0/FINAL/L3/8day_running/{c_year}/{file_name}"
                 try:
                     output_file = join(c_output_folder, file_name)
-                    # ------ One option is to delete previous one
-                    # if os.path.exists(output_file):
-                    #     os.remove(output_file)
-                    # ------- Another option is to download only if it doesn't exist
+                    # ------- Only delete if the file is not the same size
                     if os.path.exists(output_file):
-                        continue
+                        size = response.headers.get('content-length', 0)
+                        size = int(size)
+                        if os.path.getsize(output_file) == size:
+                            continue
+                        else:
+                            os.remove(output_file)
                     print(F"Downloading file for day {c_year}-{c_day:03d}: {URL}")
                     response = requests.get(URL)
 
