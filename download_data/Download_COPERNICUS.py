@@ -85,8 +85,8 @@ cop_ds = Copernicus_Datasets[Copernicus_Enum.SSH_DUACS_L4_D_1993]
 # output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS"
 output_folder = "/tmp/OZ/"
 
-for c_year in range(1993, 2024):
-    download_by_year(c_year, cop_ds, bbox_gom, output_folder)
+for c_year in range(2011, 2024):
+    download_by_year(c_year, cop_ds, bbox_global, output_folder)
     # download_by_month(c_year, cop_ds, bbox, output_folder)
 
 # %% TODO Understand: 
