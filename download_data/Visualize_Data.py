@@ -1,3 +1,4 @@
+# %%
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm, Normalize
@@ -9,12 +10,14 @@ from datetime import datetime, timedelta, date
 import xarray as xr
 from shapely.geometry.linestring import LineString
 import sys
-sys.path.append("/home/olmozavala/Dropbox/MyProjects/OZ_LIB/eoas_preprocessing/")
+# sys.path.append("/home/olmozavala/Dropbox/MyProjects/OZ_LIB/eoas_preprocessing/")
+sys.path.append("/unity/f1/ozavala/CODE/lce_ml_detection/eoas_pyutils") # Just when running this file directly for testing
 from proc_utils.gom import lc_from_ssh
 
 ## Define dates and domain
 
-root_folder = "/Net/work/ozavala/GOFFISH/"
+# root_folder = "/Net/work/ozavala/GOFFISH/"
+root_folder = "/unity/f1/ozavala/DATA/GOFFISH"
 
 sss_path = "SSS/SMAP_Global"
 adt_path = "AVISO"
@@ -31,6 +34,7 @@ lon = (bbox[0], bbox[1])
 lon_360 = (360 + bbox[0], 360 + bbox[1])
 lat = (bbox[2], bbox[3])
 
+# %%
 def read_day(cur_date):
     '''
     Read and crop data for a given day
@@ -175,3 +179,17 @@ cur_date += timedelta(days=1)
 plt.close()
 ##
 
+
+# %% For years 1993 to 2023 plot the mean values for the SSH field
+input_folder = join(root_folder, "AVISO/Global")
+
+mean_ssh = []
+for year in range(1993,2023):
+    file = join(input_folder, f"{year}.nc")
+    ds = xr.load_dataset(file)
+    mean_ssh.append(ds.adt.mean())
+
+# Plot
+plt.plot(range(1993,2023), mean_ssh)
+plt.show()
+# %%

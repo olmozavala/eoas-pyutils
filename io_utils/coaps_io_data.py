@@ -56,8 +56,9 @@ def get_aviso_by_date(aviso_folder: str, c_date: datetime, bbox: Optional[List[f
 
     return aviso_data, lats, lons
 
-# %% SST by date
-def get_sst_by_date(sst_folder, c_date, bbox=None):
+# ========================= SST ======================================
+# %% SST GHRSST by date
+def get_sst_ghrsst_by_date(sst_folder, c_date, bbox=None):
     '''
     Reads SST single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
     '''
@@ -72,6 +73,19 @@ def get_sst_by_date(sst_folder, c_date, bbox=None):
     lons = sst_data.lon
 
     return sst_data, lats, lons
+
+# %% SST OSTIA by year
+def get_sst_ostia_by_year(sst_folder, year, bbox=None):
+    sst_file_name = join(sst_folder, f"OSTIA_SST_{year}.nc")
+    sst_data = xr.load_dataset(sst_file_name)
+    if bbox is not None:
+        sst_data = sst_data.sel(lat=slice(bbox[0], bbox[1]), lon=slice(bbox[2], bbox[3]))
+
+    lats = sst_data.latitude
+    lons = sst_data.longitude
+
+    return sst_data, lats, lons
+
 
 # %% SSS by date
 def get_sss_by_date(sss_folder, c_date, bbox=None):
@@ -92,7 +106,6 @@ def get_sss_by_date(sss_folder, c_date, bbox=None):
     lons = np.where(sss_data.lon > 180, sss_data.lon - 360, sss_data.lon)
 
     return sss_data, lats, lons
-
 
 # %% Chlora NOAA by date
 def get_chlora_noaa_by_date(input_folder, c_date, bbox=None):
@@ -203,7 +216,6 @@ def get_chlora_copernicus_by_date_range(input_folder, start_date, end_date, bbox
         c_start_date = date(c_year+1, 1, 1)
 
     return merged_chlora_data, lats, lons
-
 
 # %% Get HYCOM GoM data by date
 def get_hycom_gom_raw_by_date(c_date, bbox=None):
@@ -461,7 +473,6 @@ def get_biorun_cicese_nemo_by_date_range(start_date, end_date, input_folder="/un
 
     return merged_biorun_data, merged_biorun_data.latitude.values, merged_biorun_data.longitude.values
 
-    
 # %% Main just for testing
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
@@ -508,6 +519,3 @@ if __name__ == "__main__":
 
     plt.show()
     print("Done testing!")
-
-
-# %%
