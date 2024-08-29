@@ -6,7 +6,7 @@ from enum import Enum
 class Copernicus_Enum(Enum):
     # Ch
     CHLORA_L3_OLCI_300M_2016 = 0 # https://data.marine.copernicus.eu/product/OCEANCOLOUR_GLO_BGC_L3_MY_009_103/description
-    CHLORA_L3_OLCI_4KM_2016: 1 # https://data.marine.copernicus.eu/product/OCEANCOLOUR_GLO_BGC_L3_MY_009_103/description
+    CHLORA_L3_OLCI_4KM_2016 = 1 # https://data.marine.copernicus.eu/product/OCEANCOLOUR_GLO_BGC_L3_MY_009_103/description
     CHLORA_L4_D_1997 = 2 # https://data.marine.copernicus.eu/product/OCEANCOLOUR_GLO_BGC_L4_MY_009_104/description
 
     SST_ODYSSEA_L3_D = 20 # https://data.marine.copernicus.eu/product/SST_GLO_SST_L3S_NRT_OBSERVATIONS_010_010/description

@@ -84,12 +84,12 @@ bbox = bbox_gom
 cop_ds = Copernicus_Datasets[Copernicus_Enum.CHLORA_L3_OLCI_300M_2016]
 
 # output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS"
+output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS_GOM_L3_2016_OLCI_300m"
 # output_folder = "/tmp/OZ/"
-output_folder = "/home/olmozavala/Downloads/Chlora"
 
 for c_year in range(2016, 2025):
-    download_by_year(c_year, cop_ds, bbox, output_folder)
-    # download_by_month(c_year, cop_ds, bbox, output_folder)
+    # download_by_year(c_year, cop_ds, bbox, output_folder)
+    download_by_month(c_year, cop_ds, bbox, output_folder)
 
 # %% TODO Understand: 
 # export COPERNICUSMARINE_DISABLE_SSL_CONTEXT=True
