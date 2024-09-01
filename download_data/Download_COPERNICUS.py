@@ -57,23 +57,25 @@ def download_by_month(year, cop_ds, bbox, output_folder):
         else:
             output_filename = f"{start_date.year}-{start_date.month:02d}.nc"
 
-        cm.subset(
-            dataset_id=cop_ds['id'],
-            dataset_version=cop_ds['version'],
-            variables= cop_ds['variables'],
-            minimum_longitude=bbox[0],
-            maximum_longitude=bbox[2],
-            minimum_latitude=bbox[1],
-            maximum_latitude=bbox[3],
-            start_datetime=start_date.strftime("%Y-%m-%dT00:00:00"),
-            end_datetime=end_date.strftime("%Y-%m-%dT00:00:00"),
-            output_filename=output_filename,
-            output_directory=output_folder,
-            username=username,
-            password=password,
-            force_download=True
-        )
-        break
+        try: 
+            cm.subset(
+                dataset_id=cop_ds['id'],
+                dataset_version=cop_ds['version'],
+                variables= cop_ds['variables'],
+                minimum_longitude=bbox[0],
+                maximum_longitude=bbox[2],
+                minimum_latitude=bbox[1],
+                maximum_latitude=bbox[3],
+                start_datetime=start_date.strftime("%Y-%m-%dT00:00:00"),
+                end_datetime=end_date.strftime("%Y-%m-%dT00:00:00"),
+                output_filename=output_filename,
+                output_directory=output_folder,
+                username=username,
+                password=password,
+                force_download=True
+            )
+        except Exception as e:
+            print(f"Error downloading {output_filename}: {e}")
 
 # %% -------- Download data by year ----------
 bbox_gom = (-98.25, 7.25, -55.0, 50.0) # DO NOT DELETE THIS LINE, THIS BBOX ARE IMPORTANT!
@@ -81,15 +83,16 @@ bbox_global = (-180, -90, 180, 90) # DO NOT DELETE THIS LINE, THIS BBOX ARE IMPO
 
 bbox = bbox_gom
 
-cop_ds = Copernicus_Datasets[Copernicus_Enum.CHLORA_L3_OLCI_300M_2016]
+cop_ds = Copernicus_Datasets[Copernicus_Enum.SST_ODYSSEA_L3_P1D_1982]
 
 # output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS"
-output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS_GOM_L3_2016_OLCI_300m"
+# output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS_GOM_L3_2016_OLCI_300m"
 # output_folder = "/tmp/OZ/"
+output_folder = "/home/olmozavala/Downloads/SST"
 
-for c_year in range(2016, 2025):
-    # download_by_year(c_year, cop_ds, bbox, output_folder)
-    download_by_month(c_year, cop_ds, bbox, output_folder)
+for c_year in range(1982, 2023):
+    download_by_year(c_year, cop_ds, bbox, output_folder)
+    # download_by_month(c_year, cop_ds, bbox, output_folder)
 
 # %% TODO Understand: 
 # export COPERNICUSMARINE_DISABLE_SSL_CONTEXT=True
