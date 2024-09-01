@@ -81,13 +81,14 @@ bbox_global = (-180, -90, 180, 90) # DO NOT DELETE THIS LINE, THIS BBOX ARE IMPO
 
 bbox = bbox_gom
 
-cop_ds = Copernicus_Datasets[Copernicus_Enum.CHLORA_L3_OLCI_300M_2016]
+cop_ds = Copernicus_Datasets[Copernicus_Enum.SSH_DUACS_L3_D_SWATHS_2022]
 
 # output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS"
-output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS_GOM_L3_2016_OLCI_300m"
-# output_folder = "/tmp/OZ/"
+# output_folder = "/unity/f1/ozavala/DATA/GOFFISH/CHLORA/COPERNICUS_GOM_L3_2016_OLCI_300m"
+# output_folder = "/unity/f1/ozavala/DATA/GOFFISH/AVISO/SSH_L3_SWATHS_GoM_2022/"
+output_folder = "/tmp/OZ/"
 
-for c_year in range(2016, 2025):
+for c_year in range(2022, 2025):
     # download_by_year(c_year, cop_ds, bbox, output_folder)
     download_by_month(c_year, cop_ds, bbox, output_folder)
 
