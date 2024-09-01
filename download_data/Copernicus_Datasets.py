@@ -16,6 +16,7 @@ class Copernicus_Enum(Enum):
 
     SSH_DUACS_L4_D_2022 = 30 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L4_NRT_008_046/description
     SSH_DUACS_L4_D_1993 = 31 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L4_MY_008_047/description
+    SSH_DUACS_L3_D_SWATHS_2022 = 32 # https://data.marine.copernicus.eu/product/SEALEVEL_GLO_PHY_L3_NRT_008_044/description
 
 # Create a dictionary with the Copernicus datasets
 Copernicus_Datasets = {
@@ -37,6 +38,16 @@ Copernicus_Datasets = {
         'end_date':"Sep 2023",
         'resolution':'0.25x0.25',
         'variables': ["adt", "err_sla", "err_ugosa", "err_vgosa", "flag_ice", "sla", "tpa_correction", "ugos", "ugosa", "vgos", "vgosa"],
+    },
+    Copernicus_Enum.SSH_DUACS_L3_D_SWATHS_2022: {
+        'name': 'Global Ocean Along Track L 3 Sea Surface Heights Nrt',
+        'short_name': 'SSH_DUACS_L3_D_SWATHS_2022', 
+        'id': "cmems_obs-sl_glo_phy-ssh_nrt_al-l3-duacs_PT1S",
+        'version':'202112',
+        'start_date':"2022-01-01",
+        'end_date':'Current',
+        'resolution':'7km',
+        'variables': ["adt",  "sla"],
     },
     Copernicus_Enum.CHLORA_L3_OLCI_300M_2016: {
         'name': 'Global Ocean Colour, Bio-Geo-Chemical, L3 (daily) from Satellite Observations (1997-ongoing)',
