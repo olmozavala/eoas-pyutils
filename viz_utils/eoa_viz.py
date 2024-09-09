@@ -496,7 +496,7 @@ class EOAImageVisualizer:
                             file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, 
                             mincbar=None, maxcbar=None, norm=None):
         '''
-        Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
+        Wrapper function to receive an xarray with 2D fields. It calls the 'main' function for 3D plotting
         :param xr_ds:
         :param var_names:
         :param title:
@@ -521,7 +521,7 @@ class EOAImageVisualizer:
                             file_name_prefix='', cmap=None,  flip_data=False,
                             rot_90=False, show_color_bar=True, plot_mode=PlotMode.RASTER, mincbar=None, maxcbar=None, norm=None):
         '''
-        Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
+        Wrapper function to receive a list of 2D numpy data. It calls the 'main' function for 3D plotting
         :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]
         :param var_names:
         :param title:
@@ -537,10 +537,13 @@ class EOAImageVisualizer:
         '''
         npdict_3d = {}
         for i, field_name in enumerate(var_names):
-            if len(np_variables.shape) == 3:
-                c_np_data = np_variables[i, :, :]
+            if isinstance(np_variables, list):
+                c_np_data = np_variables[i]  # Single field
             else:
-                c_np_data = np_variables  # Single field
+                if len(np_variables.shape) == 3:
+                    c_np_data = np_variables[i, :, :]
+                else:
+                    c_np_data = np_variables[i]  # Single field
 
             if rot_90:
                 c_np_data = np.rot90(c_np_data)

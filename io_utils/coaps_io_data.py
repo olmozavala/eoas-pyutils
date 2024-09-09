@@ -2,6 +2,7 @@
 # Purpose: Functions for reading and writing COAPS data
 import os
 from os.path import join
+from typing import List, Optional, Tuple
 import pandas as pd
 import xarray as xr
 import numpy as np
@@ -16,7 +17,7 @@ sys.path.append("../")  # (with interactive window)
 from io_utils.dates_utils import get_day_of_year_from_month_and_day
 
 # %% AVISO by month
-def get_aviso_by_month(aviso_folder, c_date, bbox=None):
+def get_aviso_by_month(aviso_folder: str, c_date: datetime, bbox: Optional[List[float]] = None) -> Tuple[xr.Dataset, xr.DataArray, xr.DataArray]:
     '''
     Reads AVISO monthly data for a given date. You can also specify a bounding box and the data will be cropped to that region.
     '''
@@ -32,7 +33,7 @@ def get_aviso_by_month(aviso_folder, c_date, bbox=None):
     return aviso_data, lats, lons
 
 # %% AVISO by date
-def get_aviso_by_date(aviso_folder, c_date, bbox=None):
+def get_aviso_by_date(aviso_folder: str, c_date: datetime, bbox: Optional[List[float]] = None) -> Tuple[xr.Dataset, xr.DataArray, xr.DataArray]:
     '''
     Reads AVISO single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
     '''
@@ -107,43 +108,112 @@ def get_sss_by_date(sss_folder, c_date, bbox=None):
     return sss_data, lats, lons
 
 # %% Chlora NOAA by date
-def get_chlora_noaa_by_date(chlora_folder, c_date, bbox=None):
+def get_chlora_noaa_by_date(input_folder, c_date, bbox=None):
     '''
     Reads Chlor-a data single day for a given date. You can also specify a bounding box and the data will be cropped to that region.
     '''
-    chlora_file_name = join(chlora_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
-    chlora_data = xr.load_dataset(chlora_file_name)
+    chlora_file_name = join(input_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
+    chlora = xr.load_dataset(chlora_file_name)
     if bbox is not None:
         # TODO for some reason the latitude field is flipped
-        chlora_data = chlora_data.sel( latitude=slice(bbox[1],bbox[0]),
+        chlora = chlora.sel( latitude=slice(bbox[1],bbox[0]),
                                        longitude=slice(bbox[2], bbox[3])) 
 
 
-    lats = chlora_data.latitude
-    lons = chlora_data.longitude
+    lats = chlora.latitude
+    lons = chlora.longitude
 
-    return chlora_data, lats, lons
+    return chlora, lats, lons
 
-def get_chlora_noaa_by_date_range(chlora_folder, start_date, end_date, bbox=None):
+def get_chlora_noaa_by_date_range(input_folder, start_date, end_date, bbox=None):
     '''
     Reads Chlor-a data for a given date range. You can also specify a bounding box and the data will be cropped to that region.
     '''
     merged_chlora_data = None
     for i, c_date in enumerate(pd.date_range(start=start_date, end=end_date, freq="1D")):
-        chlora_file_name = join(chlora_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
+        chlora_file_name = join(input_folder,  f"{c_date.year}-{c_date.month:02d}-{c_date.day:02d}.nc")
 
-        chlora_data = xr.load_dataset(chlora_file_name)
+        chlora = xr.load_dataset(chlora_file_name)
         if bbox is not None:
             # TODO for some reason the latitude field is flipped
-            chlora_data = chlora_data.sel( latitude=slice(bbox[1],bbox[0]),
+            chlora = chlora.sel( latitude=slice(bbox[1],bbox[0]),
                                         longitude=slice(bbox[2], bbox[3])) 
 
         if merged_chlora_data is None:
-            lats = chlora_data.latitude
-            lons = chlora_data.longitude
-            merged_chlora_data = chlora_data
+            lats = chlora.latitude
+            lons = chlora.longitude
+            merged_chlora_data = chlora
         else:
-            merged_chlora_data = xr.concat([merged_chlora_data, chlora_data], dim="time")
+            merged_chlora_data = xr.concat([merged_chlora_data, chlora], dim="time")
+
+    return merged_chlora_data, lats, lons
+
+def get_chlora_copernicus_by_date(input_folder, c_date, bbox=None):
+        """
+        Retrieves chlorophyll-a data from Copernicus dataset for a specific date.
+
+        Parameters:
+        - input_folder (str): The path to the folder containing the Copernicus dataset files.
+        - c_date (datetime.datetime): The date for which to retrieve the chlorophyll-a data.
+        - bbox (list or None): Optional bounding box coordinates [lat_min, lat_max, lon_min, lon_max]
+            to subset the data. Default is None.
+
+        Returns:
+        - chlora_c_date (xarray.DataArray): The chlorophyll-a data for the specified date.
+        - lats (xarray.DataArray): The latitude values corresponding to the chlorophyll-a data.
+        - lons (xarray.DataArray): The longitude values corresponding to the chlorophyll-a data.
+        """
+        c_year = c_date.year
+
+        cop_files = [x for x in os.listdir(input_folder) if x.find(str(c_year)) != -1]
+        assert len(cop_files) == 1, "There should be only one file per year"
+        file_name = cop_files[0]
+        ds = xr.load_dataset(join(input_folder, file_name))
+        chlora = ds.CHL
+        c_day_of_year = get_day_of_year_from_month_and_day(c_date.month, c_date.day, c_year)
+
+        chlora_c_date = chlora[c_day_of_year,:,:]
+
+        if bbox is not None:
+                chlora_c_date = chlora_c_date.sel(latitude=slice(bbox[0],bbox[1]),
+                                                        longitude=slice(bbox[2], bbox[3]))
+        
+        lats = chlora_c_date.latitude
+        lons = chlora_c_date.longitude
+
+        return chlora_c_date, lats, lons
+
+def get_chlora_copernicus_by_date_range(input_folder, start_date, end_date, bbox=None):
+    c_start_date = start_date
+    c_year = c_start_date.year
+    end_year = end_date.year
+
+    merged_chlora_data = None
+    while c_start_date < end_date:
+        cop_files = [x for x in os.listdir(input_folder) if x.find(str(c_year)) != -1]
+        assert len(cop_files) == 1, "There should be only one file per year"
+        file_name = cop_files[0]
+        ds = xr.load_dataset(join(input_folder, file_name))
+        chlora = ds.CHL
+        c_day_of_year = get_day_of_year_from_month_and_day(c_start_date.month, c_start_date.day, c_year)
+        if end_year == c_year:
+            end_day_of_year = get_day_of_year_from_month_and_day(end_date.month, end_date.day, end_year)
+            chlora = chlora[c_day_of_year:end_day_of_year]
+        else:
+            chlora = chlora[c_day_of_year:]
+
+        if bbox is not None:
+            chlora = chlora.sel(latitude=slice(bbox[0],bbox[1]),
+                                longitude=slice(bbox[2], bbox[3]))
+
+        if merged_chlora_data is None:
+            lats = chlora.latitude
+            lons = chlora.longitude
+            merged_chlora_data = chlora
+        else:
+            merged_chlora_data = xr.concat([merged_chlora_data, chlora], dim="time")
+
+        c_start_date = date(c_year+1, 1, 1)
 
     return merged_chlora_data, lats, lons
 
