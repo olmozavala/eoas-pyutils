@@ -155,7 +155,7 @@ class EOAImageVisualizer:
                 img = plt.imread(join(self._eoas_pyutils_path,'viz_utils/imgs/bathymetry_3600x1800.jpg'))
             # If img is not defined, then it will not plot the background
             if 'img' in locals():
-                c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
+                im = c_ax.imshow(img, origin='upper', extent=(-180,180,-90,90), transform=ccrs.PlateCarree())
 
         if mode == PlotMode.RASTER or mode == PlotMode.MERGED:
             if self._contourf:
@@ -180,9 +180,9 @@ class EOAImageVisualizer:
                 im = c_ax.contour(c_img, extent=self._extent, transform=self._projection)
             if mode == PlotMode.MERGED:
                 if self._contour_labels:
-                    c_ax.contour(c_img, self._contour_labels, colors='r', extent=self._extent, transform=self._projection)
+                    im = c_ax.contour(c_img, self._contour_labels, colors='r', extent=self._extent, transform=self._projection)
                 else:
-                    c_ax.contour(c_img, extent=self._extent, transform=self._projection)
+                    im = c_ax.contour(c_img, extent=self._extent, transform=self._projection)
 
         if len(self._additional_polygons) > 0:
             pol_lats = []
@@ -449,8 +449,8 @@ class EOAImageVisualizer:
                 if self._show_var_names:
                     c_title = F'{var_names[idx_var]} {title}'
                 else:
-
                     c_title = F'{title}'
+
                 if len(z_levels) > 1:
                     c_title += F"Z - level: {c_slice_txt}"
 
@@ -462,6 +462,35 @@ class EOAImageVisualizer:
         file_name = F'{file_name_prefix}'
         pylab.savefig(join(self._output_folder, F'{file_name}.png'), bbox_inches='tight', dpi=300)
         self._close_figure()
+
+    def plot_3d_data_np(self, np_variables:list, var_names:list, rot_90=False, flip_data=False, **kwargs):
+        '''
+        Wrapper function to receive raw 2D numpy data. It calls the 'main' function for 3D plotting
+        :param np_variables: Numpy variables. They can be with shape [fields, x, y]  or just a single field with shape [x,y]
+        :param var_names:
+        :param title:
+        :param file_name_prefix:
+        :param cmap:
+        :param flip_data:
+        :param rot_90:
+        :param show_color_bar:
+        :param plot_mode:
+        :param mincbar:
+        :param maxcbar:
+        :return:
+        '''
+        npdict_3d = {}
+        for i, field_name in enumerate(var_names):
+            c_np_data = np_variables[i]  # Single field
+
+            if rot_90:
+                c_np_data = np.rot90(c_np_data)
+            if flip_data:
+                c_np_data = np.flip(np.flip(c_np_data), axis=1)
+            npdict_3d[field_name] = c_np_data
+        
+        self.plot_3d_data_npdict(npdict_3d, var_names, **kwargs)
+
 
     def plot_2d_data_xr(self, xr_ds:list, var_names:list, title='',
                             file_name_prefix='', cmap='viridis',  show_color_bar=True, plot_mode=PlotMode.RASTER, 
