@@ -398,25 +398,30 @@ def get_biorun_cicese_nemo_by_date_range(start_date, end_date, input_folder="/un
     lons = ds.nav_lon[0,:]
 
     prev_ptr_file = None
-    c_start_date = start_date
-    c_year = start_date.year
-    cfend_time_date = cftime.DatetimeNoLeap(end_date.year, end_date.month, end_date.day)
+    c_start_date = start_date # This is the date we want to start with
 
     while c_start_date < end_date:
-        cfstart_time_date = cftime.DatetimeNoLeap(start_date.year, start_date.month, start_date.day)
+        cfstart_time_date = cftime.DatetimeNoLeap(c_start_date.year, c_start_date.month, c_start_date.day)
+        c_year = c_start_date.year
         # Read all the files that contain "ptrc_T" in the name
         ptr_files = [x for x in os.listdir(input_folder) if x.find("ptrc_T") != -1 and x.find(str(c_year)) != -1]
+        # print(f"Files related to {c_year}: {ptr_files}")
+        success_to_load = False
         for c_ptr_file in ptr_files:
             # Create a date for the start date of the file. It is the 4th element of the file name and the format is YYYYMMDD
             file_start_date = date(int(c_ptr_file.split("_")[3][0:4]), int(c_ptr_file.split("_")[3][4:6]), int(c_ptr_file.split("_")[3][6:8]))
             file_end_date = date(int(c_ptr_file.split("_")[4][0:4]), int(c_ptr_file.split("_")[4][4:6]), int(c_ptr_file.split("_")[4][6:8]))
+            cfend_time_date = cftime.DatetimeNoLeap(end_date.year, end_date.month, end_date.day)
+            # print(f"Current date: {c_start_date} File start date: {file_start_date} - File end date: {file_end_date}.")
             # Verify the desired date is withing the range of dates
             if c_start_date >= file_start_date and c_start_date <= file_end_date:
+                print(f"Found file {c_ptr_file} Current date: {c_start_date} File start date: {file_start_date} - File end date: {file_end_date}.")
+                success_to_load = True
                 c_sal_temp_file = c_ptr_file.replace("ptrc_T", "grid_T_SAL_TEMP")
                 c_mld_ssh_file = c_ptr_file.replace("ptrc_T", "grid_T_MLD_SSH")
 
                 if c_ptr_file != prev_ptr_file:
-                    print(f"Loading {c_ptr_file}  - Current date range: {c_start_date} - {end_date}")
+                    # print(f"Loading as new file ...")
                     prev_ptr_file = c_ptr_file
                     # PTR file -> DCHL, NCHL
                     # T_SAL_TEMP -> vosaline, votemper
@@ -424,8 +429,8 @@ def get_biorun_cicese_nemo_by_date_range(start_date, end_date, input_folder="/un
                     ds_ptr = xr.open_dataset(join(input_folder, c_ptr_file))
                     ds_sal_temp = xr.open_dataset(join(input_folder, c_sal_temp_file))
                     ds_mld_ssh = xr.open_dataset(join(input_folder, c_mld_ssh_file))
-                else:
-                    print(f"Skipping {c_ptr_file}  - Current date range: {c_start_date} - {end_date}")
+                # else:
+                    # print(f"Skipping as it is the same file ...")
 
                 times = pd.date_range(start=file_start_date, end=file_end_date, freq="1D")
 
@@ -443,7 +448,6 @@ def get_biorun_cicese_nemo_by_date_range(start_date, end_date, input_folder="/un
                     ptr_time_idx = ptr_time_idx[:min_len]
                     mld_ssh_time_idx = mld_ssh_time_idx[:min_len]
                     time_idx = time_idx[:min_len]
-                    
 
                 ds = xr.Dataset( {
                     "temperature"    : (("time", "latitude", "longitude"), ds_sal_temp.votemper[sal_temp_time_idx,0,:,:].data[np.newaxis,:,:].squeeze()),
@@ -469,7 +473,11 @@ def get_biorun_cicese_nemo_by_date_range(start_date, end_date, input_folder="/un
                     merged_biorun_data = xr.concat([merged_biorun_data, ds], dim="time")
 
                 c_start_date = file_end_date + pd.Timedelta(days=1)
+                # print(f"Next date: {c_start_date}")
                 break
+        if not success_to_load:
+            print(f"Warning: No data found for {c_start_date}. Moving to next date.")
+            c_start_date = c_start_date + pd.Timedelta(days=1)
 
     return merged_biorun_data, merged_biorun_data.latitude.values, merged_biorun_data.longitude.values
 
