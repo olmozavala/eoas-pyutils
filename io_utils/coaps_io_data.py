@@ -11,8 +11,8 @@ from datetime import date, datetime
 
 # Only if debugging 
 import sys
-sys.path.append("../")  # (with interactive window)
-# sys.path.append("eoas_pyutils")    # (without interactive window)
+# sys.path.append("../")  # (with interactive window)
+sys.path.append("eoas_pyutils")    # (without interactive window)
 
 from io_utils.dates_utils import get_day_of_year_from_month_and_day
 
